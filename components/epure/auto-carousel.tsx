@@ -114,10 +114,17 @@ export function AutoCarousel({
         Le conteneur déborde volontairement de la grille : les cartes suivantes
         restent visibles en bord d'écran, ce qui montre que la ligne défile.
       */}
+      {/*
+        `relative` est indispensable : sans lui, un descendant en position
+        absolue sans parent positionné (les libellés `sr-only` de Rating, par
+        exemple) prend pour bloc conteneur le wrapper situé au-dessus. Il
+        échappe alors au découpage, se place à des milliers de pixels sur la
+        droite et fait déborder la page entière à l'horizontale.
+      */}
       <div
         ref={viewport}
         className={cn(
-          "scrollbar-none container-page flex gap-5 overflow-x-auto pb-2",
+          "scrollbar-none container-page relative flex gap-5 overflow-x-auto pb-2",
           className,
         )}
       >

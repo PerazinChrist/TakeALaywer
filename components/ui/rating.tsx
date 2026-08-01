@@ -16,7 +16,10 @@ export function Rating({
   const rounded = Math.round(value);
 
   return (
-    <span className={cn("inline-flex items-center gap-1.5", className)}>
+    // `relative` borne le libellé `sr-only` ci-dessous, qui est en position
+    // absolue : sans repère, il se positionnerait par rapport au premier
+    // ancêtre positionné, hors du composant.
+    <span className={cn("relative inline-flex items-center gap-1.5", className)}>
       <span className="inline-flex gap-0.5" aria-hidden="true">
         {[1, 2, 3, 4, 5].map((i) => (
           <IconStar

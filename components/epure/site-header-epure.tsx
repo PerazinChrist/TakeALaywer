@@ -22,7 +22,7 @@ const navLinks = [
 export function SiteHeaderEpure() {
   return (
     <header className="sticky top-0 z-50 border-b border-marine-950/6 bg-panel/85 backdrop-blur-md">
-      <div className="container-page flex h-20 items-center justify-between gap-6 lg:gap-12">
+      <div className="container-page flex h-20 items-center justify-between gap-4 lg:gap-12">
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2.5"
@@ -31,7 +31,9 @@ export function SiteHeaderEpure() {
           <span className="grid size-10 place-items-center rounded-xl bg-linear-to-br from-gold-400 to-gold-600 text-white shadow-gold">
             <IconScale className="size-5.5" strokeWidth={2} />
           </span>
-          <span className="font-serif text-xl font-bold tracking-tight text-marine-950">
+          {/* Sous 360 px, la pastille seule tient lieu de logo : le mot-symbole
+              et le bouton d'action ne rentrent pas ensemble. */}
+          <span className="font-serif text-xl font-bold tracking-tight text-marine-950 max-[360px]:hidden">
             Take<span className="text-gold-500">A</span>Lawyer
           </span>
         </Link>
@@ -68,7 +70,7 @@ export function SiteHeaderEpure() {
           })}
         >
           Espace Avocat
-          <IconArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+          <IconArrowRight className="hidden size-4 transition-transform group-hover:translate-x-0.5 sm:block" />
         </Link>
       </div>
     </header>

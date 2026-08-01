@@ -43,7 +43,9 @@ export function LawyersSpotlight() {
           href="/avocats"
           className={buttonStyles({ variant: "outline", size: "md" })}
         >
-          Voir les 7 000 avocats de l’annuaire
+          Voir les 7 000 avocats
+          {/* Le libellé complet ne rentre pas sur les très petits écrans. */}
+          <span className="hidden sm:inline">de l’annuaire</span>
           <IconChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>
