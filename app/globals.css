@@ -1,0 +1,292 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   TakeALawyer — Charte graphique
+   Solennite institutionnelle du droit + modernite startup tech.
+   Reference : project-modules.md § "Charte Graphique de la Page d'Accueil"
+   ========================================================================== */
+
+@theme {
+  /* --- Bleu nuit / Marine profond : autorite, securite, prestige --------- */
+  --color-marine-50: #f4f7fb;
+  --color-marine-100: #e6eef7;
+  --color-marine-200: #c8dae9;
+  --color-marine-300: #97b7d3;
+  --color-marine-400: #5f8fb8;
+  --color-marine-500: #3c6f9d;
+  --color-marine-600: #2c5583;
+  --color-marine-700: #24446a;
+  --color-marine-800: #1c3352;
+  --color-marine-900: #15243c;
+  --color-marine-950: #0f172a;
+
+  /* --- Or mat / Ambre subtil : justice, excellence, CTA ------------------ */
+  --color-gold-50: #fffbeb;
+  --color-gold-100: #fef3c7;
+  --color-gold-200: #fde68a;
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #f59e0b;
+  --color-gold-500: #d97706;
+  --color-gold-600: #ca8a04;
+  --color-gold-700: #a16207;
+  --color-gold-800: #854d0e;
+
+  /* --- Vert emeraude : reserve a la preuve sociale ----------------------- */
+  --color-trust-300: #6ee7b7;
+  --color-trust-400: #34d399;
+  --color-trust-500: #10b981;
+  --color-trust-600: #059669;
+
+  /* --- Blanc pur / Gris platine ----------------------------------------- */
+  --color-platinum: #f8fafc;
+
+  /* --- Gris relevés sur la maquette de référence ------------------------- */
+  --color-panel: #e8e8ea; /* fond du bandeau de navigation */
+  --color-steel: #8b8c8e; /* pastilles rondes des réseaux sociaux */
+
+  /* --- Typographie ------------------------------------------------------ */
+  --font-serif: var(--font-playfair), "Merriweather", Georgia, serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+
+  /* --- Ombres de marque ------------------------------------------------- */
+  --shadow-marine: 0 24px 60px -20px rgb(15 23 42 / 0.35);
+  --shadow-gold: 0 18px 40px -14px rgb(217 119 6 / 0.55);
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 12px 32px -12px rgb(15 23 42 / 0.12);
+
+  /* --- Animations ------------------------------------------------------- */
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in: fade-in 0.6s ease-out both;
+  --animate-float: float 9s ease-in-out infinite;
+  --animate-float-slow: float 14s ease-in-out infinite;
+  --animate-pulse-ring: pulse-ring 2.4s ease-out infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-slide-in-left: slide-in-left 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-spin-slow: spin 26s linear infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    33% {
+      transform: translate3d(12px, -18px, 0) scale(1.03);
+    }
+    66% {
+      transform: translate3d(-10px, 12px, 0) scale(0.98);
+    }
+  }
+
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(0.85);
+      opacity: 0.7;
+    }
+    70% {
+      transform: scale(1.9);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1.9);
+      opacity: 0;
+    }
+  }
+
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+/* ==========================================================================
+   Thèmes commutables
+   --------------------------------------------------------------------------
+   Tailwind v4 compile `bg-gold-500` en `background-color: var(--color-gold-500)`.
+   Redéfinir ces variables sur `:root[data-theme=…]` recolore donc toute la page
+   à chaud, sans toucher une seule classe. La famille `gold-*` joue le rôle de
+   couleur d'accentuation : selon le thème elle est ambre, sable ou verte.
+
+   Ces règles sont hors `@theme` (donc hors cascade layer) pour l'emporter sur
+   les valeurs par défaut.
+
+   TEMPORAIRE — une fois le thème choisi, garder un seul bloc, replier ses
+   valeurs dans `@theme` et supprimer le sélecteur.
+   ========================================================================== */
+
+/* `--hero-art` pointe vers l'illustration du hero. Le panneau reprend la
+   couleur de fond exacte de cette illustration pour qu'elle s'y fonde sans
+   laisser apparaître son cadre. */
+
+/* --- Or & ambre (défaut) -------------------------------------------------- */
+:root,
+:root[data-theme="or"] {
+  --color-panel: #eeeff1;
+  --hero-art: url("/hero/or.webp");
+}
+
+/* --- Marine & crème ------------------------------------------------------- */
+:root[data-theme="marine"] {
+  --color-gold-50: #faf7f1;
+  --color-gold-100: #f3ecdf;
+  --color-gold-200: #e8dcc4;
+  --color-gold-300: #d9c9a4;
+  --color-gold-400: #c8b184;
+  --color-gold-500: #b59a66;
+  --color-gold-600: #9a8050;
+  --color-gold-700: #7c663e;
+  --color-gold-800: #5e4d2f;
+
+  --color-panel: #eeeff1;
+  --hero-art: url("/hero/marine.webp");
+}
+
+/* --- Émeraude ------------------------------------------------------------- */
+:root[data-theme="emeraude"] {
+  --color-gold-50: #f0fdf4;
+  --color-gold-100: #dcfce7;
+  --color-gold-200: #bbf7d0;
+  --color-gold-300: #86efac;
+  --color-gold-400: #4ade80;
+  --color-gold-500: #22c55e;
+  --color-gold-600: #16a34a;
+  --color-gold-700: #15803d;
+  --color-gold-800: #166534;
+
+  --color-panel: #ededef;
+  --hero-art: url("/hero/emeraude.webp");
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-white);
+    color: var(--color-marine-950);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-serif);
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background-color: var(--color-gold-200);
+    color: var(--color-marine-950);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 2px;
+  }
+}
+
+/* ==========================================================================
+   Utilitaires de marque
+   ========================================================================== */
+
+@utility container-page {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 80rem;
+  padding-inline: 1.25rem;
+
+  @media (width >= 1024px) {
+    padding-inline: 2rem;
+  }
+}
+
+/* Filet de separation dore, utilise sous les sur-titres de section. */
+@utility rule-gold {
+  &::after {
+    content: "";
+    display: block;
+    width: 3rem;
+    height: 3px;
+    margin-top: 0.75rem;
+    border-radius: 9999px;
+    background-image: linear-gradient(
+      to right,
+      var(--color-gold-500),
+      var(--color-gold-300)
+    );
+  }
+}
+
+/* Effet "teaser" du paywall : les 30 % lisibles, le reste floute. */
+@utility paywall-blur {
+  filter: blur(4px);
+  opacity: 0.55;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Skeleton loader (impression d'instantaneite au chargement). */
+@utility skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-marine-100) 25%,
+    var(--color-marine-50) 50%,
+    var(--color-marine-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
