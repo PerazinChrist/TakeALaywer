@@ -472,3 +472,261 @@ export const liveCounters = {
   averageResponse: "2h",
   lawyersOnline: 143,
 };
+
+/* ==========================================================================
+   Page d'accueil « épurée » (variante /accueil-epure)
+   --------------------------------------------------------------------------
+   Jeux de données propres à la maquette en 4 écrans. Ils vivent à côté des
+   précédents plutôt qu'à leur place : les deux pages doivent pouvoir être
+   comparées en parallèle, puis l'une des deux supprimée sans casser l'autre.
+   ========================================================================== */
+
+/* -------------------------------------------------------------------------- */
+/* Écran 2 — carrousel « Avocats à la Une »                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Emplacement commercialisé (revenus B2B) : seuls les avocats abonnés
+ * Premium ou Pionnier remontent dans ce carrousel. Le back-office filtrera
+ * sur `plan` — ici la donnée est déjà pré-filtrée.
+ */
+export type SpotlightLawyer = {
+  slug: string;
+  name: string;
+  initials: string;
+  specialty: string;
+  city: string;
+  /** Barreau d'appartenance, affiché sous la ville. */
+  bar: string;
+  rating: number;
+  reviews: number;
+  experience: string;
+  plan: "premium" | "pionnier";
+  online: boolean;
+};
+
+export const spotlightLawyers: SpotlightLawyer[] = [
+  {
+    slug: "nadege-fokou",
+    name: "Me Nadège Fokou",
+    initials: "NF",
+    specialty: "Droit des affaires & fiscal",
+    city: "Douala",
+    bar: "Barreau du Littoral",
+    rating: 4.9,
+    reviews: 127,
+    experience: "14 ans d’expérience",
+    plan: "pionnier",
+    online: true,
+  },
+  {
+    slug: "serge-ndongo",
+    name: "Me Serge Ndongo",
+    initials: "SN",
+    specialty: "Droit foncier & immobilier",
+    city: "Yaoundé",
+    bar: "Barreau du Centre",
+    rating: 4.8,
+    reviews: 94,
+    experience: "11 ans d’expérience",
+    plan: "premium",
+    online: true,
+  },
+  {
+    slug: "clarisse-mbala",
+    name: "Me Clarisse Mbala",
+    initials: "CM",
+    specialty: "Droit de la famille",
+    city: "Douala",
+    bar: "Barreau du Littoral",
+    rating: 5,
+    reviews: 68,
+    experience: "9 ans d’expérience",
+    plan: "pionnier",
+    online: false,
+  },
+  {
+    slug: "alain-bekolo",
+    name: "Me Alain Bekolo",
+    initials: "AB",
+    specialty: "Droit du travail",
+    city: "Bafoussam",
+    bar: "Barreau de l’Ouest",
+    rating: 4.7,
+    reviews: 81,
+    experience: "16 ans d’expérience",
+    plan: "premium",
+    online: true,
+  },
+  {
+    slug: "rachelle-ewane",
+    name: "Me Rachelle Ewané",
+    initials: "RE",
+    specialty: "Droit pénal & procédure",
+    city: "Yaoundé",
+    bar: "Barreau du Centre",
+    rating: 4.9,
+    reviews: 112,
+    experience: "12 ans d’expérience",
+    plan: "premium",
+    online: true,
+  },
+  {
+    slug: "patrick-kamdem",
+    name: "Me Patrick Kamdem",
+    initials: "PK",
+    specialty: "Droit des contrats",
+    city: "Kribi",
+    bar: "Barreau du Sud",
+    rating: 4.8,
+    reviews: 57,
+    experience: "8 ans d’expérience",
+    plan: "pionnier",
+    online: false,
+  },
+];
+
+/* -------------------------------------------------------------------------- */
+/* Écran 3 — bibliothèque de guides & modèles, dès 250 FCFA                   */
+/* -------------------------------------------------------------------------- */
+
+export type PracticalGuide = {
+  slug: string;
+  /** Un guide s'explique, un modèle se remplit : la carte le signale. */
+  kind: "guide" | "modele";
+  title: string;
+  category: string;
+  /** Les premières lignes restent lisibles… */
+  excerpt: string;
+  /** …la suite est floutée derrière le paiement (directive-ui.md § 4). */
+  blurred: string;
+  /** Montant en FCFA — mis en forme par `formatFcfa`. */
+  price: number;
+  pages: number;
+  downloads: string;
+  /** Ce que l'achat débloque concrètement — l'argument qui déclenche l'achat. */
+  unlocks: [string, string];
+  author: { name: string; initials: string };
+};
+
+export const practicalGuides: PracticalGuide[] = [
+  {
+    slug: "litige-bailleur",
+    kind: "guide",
+    title: "Que faire en cas de litige avec son bailleur ?",
+    category: "Droit foncier",
+    excerpt:
+      "Loyers réclamés à tort, caution jamais rendue, expulsion annoncée du jour au lendemain : voici l’ordre exact des démarches.",
+    blurred:
+      "Commencez par une mise en demeure recommandée : elle fait courir le délai légal et constitue la première pièce de votre dossier.",
+    price: 250,
+    pages: 12,
+    downloads: "2 340",
+    unlocks: [
+      "Modèle de mise en demeure prêt à envoyer",
+      "Le délai légal à respecter, étape par étape",
+    ],
+    author: { name: "Me Serge Ndongo", initials: "SN" },
+  },
+  {
+    slug: "modele-contrat-travail",
+    kind: "modele",
+    title: "Contrat de travail simplifié conforme",
+    category: "Droit du travail",
+    excerpt:
+      "Un modèle prêt à signer, conforme au code du travail : durée, période d’essai, rémunération et clauses obligatoires déjà rédigées.",
+    blurred:
+      "Article 4 — La période d’essai est fixée à … mois, renouvelable une seule fois par accord écrit des deux parties.",
+    price: 500,
+    pages: 6,
+    downloads: "1 870",
+    unlocks: [
+      "Document Word modifiable, prêt à signer",
+      "Les 5 clauses obligatoires déjà rédigées",
+    ],
+    author: { name: "Me Alain Bekolo", initials: "AB" },
+  },
+  {
+    slug: "acheter-terrain-securite",
+    kind: "guide",
+    title: "Les étapes légales pour acheter un terrain en toute sécurité",
+    category: "Droit foncier",
+    excerpt:
+      "Les 11 vérifications à faire avant de verser le moindre franc, et les pièces à exiger du vendeur à chaque étape.",
+    blurred:
+      "Vérification n°3 : demandez un certificat de propriété daté de moins de trois mois à la conservation foncière du ressort.",
+    price: 250,
+    pages: 15,
+    downloads: "3 120",
+    unlocks: [
+      "Checklist des 11 vérifications avant de payer",
+      "La liste des pièces exigées par le vendeur",
+    ],
+    author: { name: "Me Serge Ndongo", initials: "SN" },
+  },
+  {
+    slug: "creer-sarl-formalites",
+    kind: "guide",
+    title: "Créer sa SARL : formalités, délais et coûts réels",
+    category: "Droit des affaires",
+    excerpt:
+      "Le parcours complet du dépôt des statuts à l’immatriculation, avec le budget à prévoir poste par poste.",
+    blurred:
+      "Étape 5 — Le dépôt au greffe du tribunal de commerce doit intervenir dans les 30 jours suivant la signature des statuts.",
+    price: 250,
+    pages: 18,
+    downloads: "4 015",
+    unlocks: [
+      "Le budget réel, poste par poste",
+      "Le calendrier des formalités jusqu’au greffe",
+    ],
+    author: { name: "Me Nadège Fokou", initials: "NF" },
+  },
+];
+
+/* -------------------------------------------------------------------------- */
+/* Écran 4 — « Comment ça marche ? » : 3 étapes + 3 réassurances              */
+/* -------------------------------------------------------------------------- */
+
+export const simpleSteps = [
+  {
+    step: "1",
+    title: "Posez",
+    description:
+      "Décrivez votre situation en 2 minutes, sans donner votre identité.",
+    icon: "send" as const,
+  },
+  {
+    step: "2",
+    title: "Choisissez",
+    description:
+      "Comparez les avocats qui vous répondent et retenez celui qui vous convient.",
+    icon: "users" as const,
+  },
+  {
+    step: "3",
+    title: "Résolvez",
+    description:
+      "Consultez votre avocat, ou réglez le problème seul avec un guide dès 250 FCFA.",
+    icon: "check" as const,
+  },
+];
+
+export const reassurancePoints = [
+  {
+    title: "100 % anonyme & confidentiel",
+    description: "Posez votre question sans afficher votre nom.",
+    icon: "lock" as const,
+  },
+  {
+    title: "Avocats qualifiés",
+    description: "Vos interlocuteurs sont tous inscrits au Barreau.",
+    icon: "scale" as const,
+  },
+  {
+    title: "Paiement mobile simple",
+    description:
+      "Débloquez vos guides ou consultations en 1 clic par Mobile Money.",
+    icon: "phone" as const,
+  },
+];

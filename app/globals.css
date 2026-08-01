@@ -268,6 +268,16 @@
   pointer-events: none;
 }
 
+/* Defilement horizontal sans barre visible (carrousels). */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Skeleton loader (impression d'instantaneite au chargement). */
 @utility skeleton {
   background-image: linear-gradient(

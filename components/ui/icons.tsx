@@ -124,9 +124,32 @@ export const IconChevronRight = (p: IconProps) => (
   </Outline>
 );
 
+export const IconChevronLeft = (p: IconProps) => (
+  <Outline {...p}>
+    <path d="m15 18-6-6 6-6" />
+  </Outline>
+);
+
 export const IconChevronDown = (p: IconProps) => (
   <Outline {...p}>
     <path d="m6 9 6 6 6-6" />
+  </Outline>
+);
+
+export const IconDownload = (p: IconProps) => (
+  <Outline {...p}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <path d="M7 10l5 5 5-5" />
+    <path d="M12 15V3" />
+  </Outline>
+);
+
+/** Paiement Mobile Money — telephone avec un signe de validation. */
+export const IconSmartphone = (p: IconProps) => (
+  <Outline {...p}>
+    <rect width="14" height="20" x="5" y="2" rx="2.5" />
+    <path d="M12 18h.01" />
+    <path d="m9.5 10 1.8 1.8 3.2-3.4" />
   </Outline>
 );
 

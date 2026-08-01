@@ -161,7 +161,7 @@ function HeroVisual() {
   const lawyer = featuredLawyers[0];
 
   return (
-    <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+    <div className=" relative mx-auto w-full max-w-md lg:max-w-none">
       {/* Carte principale : aperçu d'une réponse d'avocat */}
       <div className="animate-fade-up rounded-3xl border border-white/70 bg-white/55 p-2 shadow-marine backdrop-blur-md [animation-delay:120ms]">
         <div className="rounded-[1.15rem] bg-white p-5 sm:p-6">
