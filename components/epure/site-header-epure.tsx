@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { buttonStyles } from "@/components/ui/button";
+import { fetchCurrentAccount } from "@/lib/api/account";
 import { IconArrowRight, IconScale } from "@/components/ui/icons";
 
 /**
@@ -19,7 +20,16 @@ const navLinks = [
   { href: "#comment-ca-marche", label: "Comment ça marche" },
 ];
 
-export function SiteHeaderEpure() {
+export async function SiteHeaderEpure() {
+  /*
+   * Composant serveur : la session est lue directement, sans état client ni
+   * scintillement au chargement. Le bouton d'action mène à l'inscription pour
+   * un visiteur, à son espace pour un praticien connecté — proposer « Espace
+   * Avocat » à quelqu'un qui a déjà un compte, et l'envoyer sur un formulaire
+   * d'inscription, n'a pas de sens.
+   */
+  const session = await fetchCurrentAccount();
+
   return (
     <header className="sticky top-0 z-50 border-b border-marine-950/6 bg-panel/85 backdrop-blur-md">
       <div className="container-page flex h-20 items-center justify-between gap-4 lg:gap-12">
@@ -62,14 +72,14 @@ export function SiteHeaderEpure() {
         </nav>
 
         <Link
-          href="/avocats/inscription"
+          href={session ? "/avocats/espace-praticien" : "/avocats/inscription"}
           className={buttonStyles({
             variant: "outline",
             size: "sm",
             className: "border-marine-950/12 bg-white/70",
           })}
         >
-          Espace Avocat
+          {session ? "Mon espace" : "Espace Avocat"}
           <IconArrowRight className="hidden size-4 transition-transform group-hover:translate-x-0.5 sm:block" />
         </Link>
       </div>

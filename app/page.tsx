@@ -14,6 +14,7 @@ import { Testimonials } from "@/components/home/testimonials";
 import { LawyerCta } from "@/components/home/lawyer-cta";
 import { SocialProofToaster } from "@/components/social-proof-toaster";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { fetchCurrentAccount } from "@/lib/api/account";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -50,10 +51,14 @@ const structuredData = {
   ],
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  // L'en-tête est un composant client : il ne peut pas lire le cookie de
+  // session lui-même, on le lui transmet depuis le rendu serveur.
+  const isSignedIn = Boolean(await fetchCurrentAccount());
+
   return (
     <>
-      <SiteHeader />
+      <SiteHeader isSignedIn={isSignedIn} />
 
       {/* La marge basse laisse la place a la barre d'action mobile. */}
       <main id="contenu" className="pb-24 lg:pb-0">

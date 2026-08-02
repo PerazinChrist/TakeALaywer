@@ -27,29 +27,47 @@ const socialLinks = [
   { href: "https://wa.me/237600000000", label: "WhatsApp", Icon: IconWhatsapp },
 ];
 
-/** Contenu du panneau ouvert par le bouton menu (visible à toutes les tailles). */
-const menuColumns = [
-  {
-    title: "Citoyens",
-    links: [
-      { href: "/besoin/nouveau", label: "Poser mon besoin" },
-      { href: "/avocats", label: "Trouver un avocat" },
-      { href: "/guides", label: "Guides & articles" },
-      { href: "/#diagnostic", label: "Diagnostic rapide" },
-    ],
-  },
-  {
-    title: "Espace Avocat",
-    links: [
-      { href: "/avocats/inscription", label: "Rejoindre le réseau" },
-      { href: "/avocats/espace-praticien", label: "Espace praticien" },
-      { href: "/tarifs", label: "Offre Pionnière" },
-      { href: "/avocats/publier", label: "Publier un guide" },
-    ],
-  },
-];
+/**
+ * Contenu du panneau ouvert par le bouton menu (visible à toutes les tailles).
+ *
+ * La colonne « Espace Avocat » dépend de la session : proposer « Rejoindre le
+ * réseau » à quelqu'un qui a déjà un compte n'a pas de sens, et la page
+ * d'inscription le renverrait de toute façon vers son espace.
+ */
+function menuColumns(isSignedIn: boolean) {
+  return [
+    {
+      title: "Citoyens",
+      links: [
+        { href: "/besoin/nouveau", label: "Poser mon besoin" },
+        { href: "/avocats", label: "Trouver un avocat" },
+        { href: "/guides", label: "Guides & articles" },
+        { href: "/#diagnostic", label: "Diagnostic rapide" },
+      ],
+    },
+    {
+      title: "Espace Avocat",
+      links: [
+        isSignedIn
+          ? { href: "/avocats/espace-praticien", label: "Mon espace praticien" }
+          : { href: "/avocats/inscription", label: "Rejoindre le réseau" },
+        ...(isSignedIn
+          ? []
+          : [{ href: "/avocats/espace-praticien", label: "Espace praticien" }]),
+        { href: "/tarifs", label: "Offre Pionnière" },
+        { href: "/avocats/publier", label: "Publier un guide" },
+      ],
+    },
+  ];
+}
 
-export function SiteHeader() {
+/**
+ * @param isSignedIn Session ouverte, résolue côté serveur par la page qui
+ *                   monte cet en-tête. Passer l'information en propriété plutôt
+ *                   que de l'aller chercher ici évite un état client qui
+ *                   afficherait « Connexion » le temps d'une requête.
+ */
+export function SiteHeader({ isSignedIn = false }: { isSignedIn?: boolean }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -158,7 +176,7 @@ export function SiteHeader() {
             className="animate-fade-up border-b border-marine-950/8 bg-white shadow-card"
           >
             <div className="container-page grid gap-8 py-8 md:grid-cols-3 lg:gap-12 lg:py-10">
-              {menuColumns.map((column) => (
+              {menuColumns(isSignedIn).map((column) => (
                 <nav key={column.title} aria-label={column.title}>
                   <p className="rule-gold text-[0.7rem] font-bold tracking-[0.22em] text-gold-600 uppercase">
                     {column.title}
@@ -200,8 +218,10 @@ export function SiteHeader() {
                   >
                     Poser mon besoin (gratuit)
                   </Link>
+                  {/* « /connexion » n'existe pas : la page de connexion des
+                      avocats vit sous /avocats/. */}
                   <Link
-                    href="/connexion"
+                    href={isSignedIn ? "/avocats/espace-praticien" : "/avocats/connexion"}
                     onClick={() => setOpen(false)}
                     className={buttonStyles({
                       variant: "outline",
@@ -210,7 +230,7 @@ export function SiteHeader() {
                       className: "h-11 border-marine-950/25 bg-transparent hover:bg-white/40",
                     })}
                   >
-                    Connexion
+                    {isSignedIn ? "Mon espace" : "Connexion"}
                   </Link>
                 </div>
               </div>
