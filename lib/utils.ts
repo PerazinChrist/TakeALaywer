@@ -13,6 +13,30 @@ export function cn(...classes: Array<string | false | null | undefined>) {
  * l'ICU installe), sinon l'hydratation signale une divergence.
  */
 export function formatFcfa(amount: number, { short = false } = {}) {
-  const grouped = amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-  return `${grouped} ${short ? "F" : "FCFA"}`;
+  return `${groupDigits(amount)} ${short ? "F" : "FCFA"}`;
+}
+
+/**
+ * Entier avec separateur de milliers : 4015 -> « 4 015 ».
+ *
+ * Meme raison que `formatFcfa` de ne pas passer par `toLocaleString` : le
+ * resultat doit etre identique sur le serveur et dans le navigateur.
+ */
+export function groupDigits(value: number) {
+  return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
+/**
+ * Transforme une liste de facettes en table de correspondance.
+ *
+ * Les composants interrogent un domaine par son libelle (« Droit du travail »)
+ * plutot que de parcourir un tableau a chaque rendu.
+ *
+ * Vit ici et non dans `lib/api/public` : ce dernier est un module serveur — il
+ * lit les cookies et les variables d'environnement — et des composants clients
+ * ont besoin de cette fonction. L'y laisser tirait tout le module dans le
+ * bundle du navigateur, ce que le bundler refuse.
+ */
+export function facetMap(facets: { value: string; total: number }[]) {
+  return Object.fromEntries(facets.map((facet) => [facet.value, facet.total]));
 }

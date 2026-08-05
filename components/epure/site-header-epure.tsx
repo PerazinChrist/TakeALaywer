@@ -1,8 +1,10 @@
 import { Fragment } from "react";
 import Link from "next/link";
+import { Avatar } from "@/components/ui/avatar";
 import { buttonStyles } from "@/components/ui/button";
 import { fetchCurrentAccount } from "@/lib/api/account";
-import { IconArrowRight, IconScale } from "@/components/ui/icons";
+import { fetchCurrentClient } from "@/lib/api/citizen";
+import { IconArrowRight, IconScale, IconUser } from "@/components/ui/icons";
 
 /**
  * En-tête repris de la page d'accueil, en version adoucie.
@@ -22,13 +24,19 @@ const navLinks = [
 
 export async function SiteHeaderEpure() {
   /*
-   * Composant serveur : la session est lue directement, sans état client ni
+   * Composant serveur : les sessions sont lues directement, sans état client ni
    * scintillement au chargement. Le bouton d'action mène à l'inscription pour
    * un visiteur, à son espace pour un praticien connecté — proposer « Espace
    * Avocat » à quelqu'un qui a déjà un compte, et l'envoyer sur un formulaire
    * d'inscription, n'a pas de sens.
+   *
+   * Les deux sessions sont indépendantes : un citoyen connecté voit sa pastille
+   * même si aucun avocat ne l'est, et réciproquement. Les deux lectures sont
+   * mémoïsées, et aucune requête ne part si le cookie correspondant est absent.
    */
-  const session = await fetchCurrentAccount();
+  const [session, client] = await Promise.all([fetchCurrentAccount(), fetchCurrentClient()]);
+
+  const signedIn = session !== null || client !== null;
 
   return (
     <header className="sticky top-0 z-50 border-b border-marine-950/6 bg-panel/85 backdrop-blur-md">
@@ -71,18 +79,87 @@ export async function SiteHeaderEpure() {
           ))}
         </nav>
 
-        <Link
-          href={session ? "/avocats/espace-praticien" : "/avocats/inscription"}
-          className={buttonStyles({
-            variant: "outline",
-            size: "sm",
-            className: "border-marine-950/12 bg-white/70",
-          })}
-        >
-          {session ? "Mon espace" : "Espace Avocat"}
-          <IconArrowRight className="hidden size-4 transition-transform group-hover:translate-x-0.5 sm:block" />
-        </Link>
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          {signedIn ? (
+            /*
+             * Connecté, quel que soit le versant : un seul accès, le sien.
+             * « Se connecter » ne doit jamais cohabiter avec « Mon espace » —
+             * la première invite à faire ce que la seconde prouve déjà fait.
+             *
+             * Le compte citoyen passe devant quand les deux sessions sont
+             * ouvertes : c'est celui qui se reconnaît d'un coup d'œil, à sa
+             * pastille. L'espace praticien reste atteignable juste à côté.
+             */
+            <>
+              {client && (
+                <Link
+                  href="/compte"
+                  className="flex items-center gap-2 rounded-full bg-white/70 py-1 pr-3.5 pl-1 ring-1 ring-marine-950/12 transition-colors hover:ring-gold-500/40"
+                  aria-label={`Mon espace — ${client.client.pseudonym}`}
+                >
+                  <Avatar initials={initialsOf(client.client.pseudonym)} size="sm" />
+                  <span className="hidden max-w-28 truncate text-sm font-semibold text-marine-900 sm:block">
+                    {client.client.pseudonym}
+                  </span>
+                </Link>
+              )}
+
+              {session && (
+                <Link
+                  href="/avocats/espace-praticien"
+                  className={buttonStyles({
+                    variant: "outline",
+                    size: "sm",
+                    className: "border-marine-950/12 bg-white/70",
+                  })}
+                >
+                  {/* « Espace praticien » plutôt que « Mon espace » lorsque la
+                      pastille citoyenne est là aussi : deux boutons nommés
+                      pareil ne se distingueraient plus. */}
+                  {client ? "Espace praticien" : "Mon espace"}
+                  <IconArrowRight className="hidden size-4 transition-transform group-hover:translate-x-0.5 sm:block" />
+                </Link>
+              )}
+            </>
+          ) : (
+            /* Visiteur anonyme : la connexion citoyenne en lien discret, et
+               l'appel à l'action réservé au recrutement des praticiens. */
+            <>
+              <Link
+                href="/compte/connexion"
+                className="hidden items-center gap-1.5 text-[0.95rem] font-medium text-marine-800 transition-colors hover:text-gold-600 sm:flex"
+              >
+                <IconUser className="size-4" />
+                Se connecter
+              </Link>
+
+              <Link
+                href="/avocats/inscription"
+                className={buttonStyles({
+                  variant: "outline",
+                  size: "sm",
+                  className: "border-marine-950/12 bg-white/70",
+                })}
+              >
+                Espace Avocat
+                <IconArrowRight className="hidden size-4 transition-transform group-hover:translate-x-0.5 sm:block" />
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
+}
+
+/** Deux lettres au plus, tirées du pseudonyme affiché. */
+function initialsOf(pseudonym: string): string {
+  const words = pseudonym.trim().split(/[\s-]+/).filter(Boolean);
+
+  if (words.length === 0) return "?";
+
+  const first = words[0]!.charAt(0);
+  const last = words.length > 1 ? words[words.length - 1]!.charAt(0) : "";
+
+  return (first + last).toUpperCase();
 }

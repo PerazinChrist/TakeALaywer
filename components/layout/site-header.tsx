@@ -62,12 +62,23 @@ function menuColumns(isSignedIn: boolean) {
 }
 
 /**
- * @param isSignedIn Session ouverte, résolue côté serveur par la page qui
- *                   monte cet en-tête. Passer l'information en propriété plutôt
- *                   que de l'aller chercher ici évite un état client qui
- *                   afficherait « Connexion » le temps d'une requête.
+ * @param isSignedIn       Session praticien ouverte, résolue côté serveur par la
+ *                         page qui monte cet en-tête. Passer l'information en
+ *                         propriété plutôt que de l'aller chercher ici évite un
+ *                         état client qui afficherait « Connexion » le temps
+ *                         d'une requête.
+ * @param clientSignedIn   Session citoyenne ouverte. Sans elle, quelqu'un de
+ *                         déjà connecté se verrait proposer « Connexion » —
+ *                         cette invite ne doit jamais s'afficher à qui l'a déjà
+ *                         faite.
  */
-export function SiteHeader({ isSignedIn = false }: { isSignedIn?: boolean }) {
+export function SiteHeader({
+  isSignedIn = false,
+  clientSignedIn = false,
+}: {
+  isSignedIn?: boolean;
+  clientSignedIn?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -218,10 +229,18 @@ export function SiteHeader({ isSignedIn = false }: { isSignedIn?: boolean }) {
                   >
                     Poser mon besoin (gratuit)
                   </Link>
-                  {/* « /connexion » n'existe pas : la page de connexion des
-                      avocats vit sous /avocats/. */}
+                  {/* « /connexion » n'existe pas : la connexion des avocats vit
+                      sous /avocats/, celle des citoyens sous /compte/. Le
+                      praticien l'emporte quand les deux sessions sont ouvertes —
+                      c'est l'espace qui porte le travail. */}
                   <Link
-                    href={isSignedIn ? "/avocats/espace-praticien" : "/avocats/connexion"}
+                    href={
+                      isSignedIn
+                        ? "/avocats/espace-praticien"
+                        : clientSignedIn
+                          ? "/compte"
+                          : "/compte/connexion"
+                    }
                     onClick={() => setOpen(false)}
                     className={buttonStyles({
                       variant: "outline",
@@ -230,7 +249,7 @@ export function SiteHeader({ isSignedIn = false }: { isSignedIn?: boolean }) {
                       className: "h-11 border-marine-950/25 bg-transparent hover:bg-white/40",
                     })}
                   >
-                    {isSignedIn ? "Mon espace" : "Connexion"}
+                    {isSignedIn || clientSignedIn ? "Mon espace" : "Connexion"}
                   </Link>
                 </div>
               </div>

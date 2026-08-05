@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { buttonStyles } from "@/components/ui/button";
-import { practicalGuides } from "@/lib/data/home";
-import { cn, formatFcfa } from "@/lib/utils";
+import type { GuideSummary } from "@/lib/api/public";
+import { cn, formatFcfa, groupDigits } from "@/lib/utils";
 import {
   IconBadgeCheck,
   IconCheck,
@@ -24,23 +24,28 @@ const ROTATION_MS = 6000;
  * est verrouillée par des `line-clamp` pour que le défilement automatique ne
  * fasse pas sauter la mise en page.
  */
-export function FeaturedGuideSlide() {
+export function FeaturedGuideSlide({ guides }: { guides: GuideSummary[] }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const guide = practicalGuides[index];
+
+  const total = guides.length;
 
   useEffect(() => {
     // Le défilement automatique est une animation : on le coupe si le système
     // demande de réduire les animations.
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced || paused) return;
+    if (reduced || paused || total < 2) return;
 
-    const id = setInterval(
-      () => setIndex((i) => (i + 1) % practicalGuides.length),
-      ROTATION_MS,
-    );
+    const id = setInterval(() => setIndex((i) => (i + 1) % total), ROTATION_MS);
+
     return () => clearInterval(id);
-  }, [paused]);
+  }, [paused, total]);
+
+  // Bibliothèque vide ou backend injoignable : la colonne visuelle disparaît
+  // plutôt que d'annoncer un guide inexistant.
+  if (total === 0) return null;
+
+  const guide = guides[index % total];
 
   return (
     <div className="relative mx-auto w-full max-w-md lg:max-w-none">
@@ -58,7 +63,7 @@ export function FeaturedGuideSlide() {
               Guide en vedette
             </span>
             <span className="shrink-0 rounded-full bg-gold-500 px-3 py-1 font-serif text-sm font-bold text-marine-950">
-              {formatFcfa(guide.price)}
+              {guide.free ? "Gratuit" : formatFcfa(guide.price)}
             </span>
           </div>
 
@@ -72,34 +77,32 @@ export function FeaturedGuideSlide() {
               {guide.title}
             </h2>
 
-            {/* Les premières lignes lisibles, la suite floutée. */}
-            <div className="relative mt-3">
-              <p className="line-clamp-2 text-sm/relaxed text-marine-600">
-                {guide.excerpt}
-              </p>
-              <div className="mt-1.5" aria-hidden="true">
-                <p className="paywall-blur line-clamp-1 text-sm/relaxed text-marine-600">
-                  {guide.blurred}
-                </p>
-              </div>
-            </div>
+            <p className="mt-3 line-clamp-3 min-h-[3.75rem] text-sm/relaxed text-marine-600">
+              {guide.description}
+            </p>
 
             <p className="mt-4 flex items-start gap-2 rounded-xl bg-gold-50 px-3.5 py-2.5 text-sm/snug text-marine-800">
               <IconCheck className="mt-0.5 size-4 shrink-0 text-trust-600" />
               <span className="line-clamp-2 min-h-[2.5rem]">
-                {guide.unlocks[0]}
+                {guide.free
+                  ? "Lecture libre, intégralement accessible"
+                  : `Environ 30 % du guide est lisible avant tout paiement`}
               </span>
             </p>
 
             <div className="mt-4 flex items-center gap-2.5 border-t border-marine-950/6 pt-4">
-              <Avatar initials={guide.author.initials} size="sm" />
+              <Avatar
+                initials={guide.author.initials}
+                imageUrl={guide.author.avatarUrl}
+                size="sm"
+              />
               <span className="min-w-0 text-sm/tight">
                 <span className="flex items-center gap-1 font-semibold text-marine-900">
                   <span className="truncate">{guide.author.name}</span>
                   <IconBadgeCheck className="size-3.5 shrink-0 text-gold-500" />
                 </span>
                 <span className="text-marine-500">
-                  {guide.pages} pages · {guide.downloads} téléchargements
+                  {guide.readingTime} min · {groupDigits(guide.downloads)} lectures
                 </span>
               </span>
             </div>
@@ -107,7 +110,7 @@ export function FeaturedGuideSlide() {
 
           <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
             <Link
-              href={`/guides/${guide.slug}/acheter`}
+              href={`/guides/${guide.slug}`}
               className={buttonStyles({
                 size: "sm",
                 full: true,
@@ -115,10 +118,12 @@ export function FeaturedGuideSlide() {
               })}
             >
               <IconSmartphone className="size-4" />
-              Acheter · {formatFcfa(guide.price, { short: true })}
+              {guide.free
+                ? "Lire gratuitement"
+                : `Débloquer · ${formatFcfa(guide.price, { short: true })}`}
             </Link>
             <Link
-              href={`/guides/${guide.slug}`}
+              href="/guides"
               className={buttonStyles({
                 variant: "outline",
                 size: "sm",
@@ -126,14 +131,14 @@ export function FeaturedGuideSlide() {
                 className: "border-marine-950/12 sm:flex-1",
               })}
             >
-              Lire l’extrait
+              Toute la bibliothèque
             </Link>
           </div>
 
           {/* Pagination du diaporama */}
           <div className="mt-5 flex items-center justify-between gap-3 border-t border-marine-950/6 pt-4">
             <div className="flex items-center gap-2">
-              {practicalGuides.map((item, i) => (
+              {guides.map((item, i) => (
                 <button
                   key={item.slug}
                   type="button"
@@ -152,7 +157,7 @@ export function FeaturedGuideSlide() {
 
             <button
               type="button"
-              onClick={() => setIndex((i) => (i + 1) % practicalGuides.length)}
+              onClick={() => setIndex((i) => (i + 1) % total)}
               aria-label="Guide suivant"
               className="grid size-8 place-items-center rounded-full text-marine-500 transition-colors hover:bg-marine-50 hover:text-marine-900"
             >

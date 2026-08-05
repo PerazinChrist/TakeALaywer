@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { socialProofEvents } from "@/lib/data/home";
 import {
   IconClose,
   IconCrown,
@@ -17,18 +16,32 @@ const tones = {
   review: { Icon: IconStar, className: "bg-trust-500/12 text-trust-600" },
 } as const;
 
+/** Un événement d'activité, construit côté serveur à partir de la base. */
+export type SocialProofEvent = {
+  id: string;
+  message: string;
+  detail: string;
+  tone: keyof typeof tones;
+};
+
 /**
  * Widgets de preuve sociale « en direct » — directive-ui.md § 3.
- * Discret, en bas à gauche, et refermable : la réassurance ne doit jamais
- * gêner la lecture.
+ *
+ * Discret, en bas à gauche, et refermable : la réassurance ne doit jamais gêner
+ * la lecture. Les événements sont fournis par le rendu serveur et décrivent des
+ * faits réels — un avis publié, un guide en tête de la bibliothèque — plutôt
+ * que des messages inventés qui se répéteraient à l'identique d'une visite à
+ * l'autre.
  */
-export function SocialProofToaster() {
+export function SocialProofToaster({ events }: { events: SocialProofEvent[] }) {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
+  const total = events.length;
+
   useEffect(() => {
-    if (dismissed) return;
+    if (dismissed || total === 0) return;
 
     let timer: ReturnType<typeof setTimeout>;
 
@@ -40,18 +53,18 @@ export function SocialProofToaster() {
     const hide = () => {
       setVisible(false);
       timer = setTimeout(() => {
-        setIndex((i) => (i + 1) % socialProofEvents.length);
+        setIndex((i) => (i + 1) % total);
         show();
       }, 5000);
     };
 
     timer = setTimeout(show, 4000);
     return () => clearTimeout(timer);
-  }, [dismissed]);
+  }, [dismissed, total]);
 
-  if (dismissed || !visible) return null;
+  if (dismissed || !visible || total === 0) return null;
 
-  const event = socialProofEvents[index];
+  const event = events[index % total];
   const { Icon, className } = tones[event.tone];
 
   return (

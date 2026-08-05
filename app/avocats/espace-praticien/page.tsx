@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { PractitionerSpace } from "@/components/avocats/admin/practitioner-space";
-import { fetchCurrentAccount } from "@/lib/api/account";
+import { fetchCurrentAccount, fetchMyReviews } from "@/lib/api/account";
 import { toLawyerProfile } from "@/lib/api/profile";
 
 export const metadata: Metadata = {
@@ -40,6 +40,10 @@ export default async function EspacePraticienPage() {
     redirect(CONNEXION);
   }
 
+  // Les avis en modération ne figurent pas dans `/auth/me` : ils demandent leur
+  // propre lecture, faite ici pour que la section s'ouvre déjà remplie.
+  const reviews = await fetchMyReviews();
+
   return (
     <>
       <SiteHeaderEpure />
@@ -49,6 +53,7 @@ export default async function EspacePraticienPage() {
           profile={profile}
           account={session.account}
           documents={session.documents}
+          reviews={reviews}
         />
       </main>
 

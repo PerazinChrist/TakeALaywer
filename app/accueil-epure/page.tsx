@@ -7,6 +7,7 @@ import { LawyersSpotlight } from "@/components/epure/lawyers-spotlight";
 import { GuidesLibrary } from "@/components/epure/guides-library";
 import { HowItWorksEpure } from "@/components/epure/how-it-works-epure";
 import { GoldThemeLock } from "@/components/epure/gold-theme-lock";
+import { fetchHome } from "@/lib/api/public";
 
 /**
  * Page d'accueil — VARIANTE ÉPURÉE (proposition CPA).
@@ -31,7 +32,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function AccueilEpurePage() {
+/** Même raison qu'en page d'accueil : les données viennent de la base. */
+export const dynamic = "force-dynamic";
+
+export default async function AccueilEpurePage() {
+  const home = await fetchHome();
+
   return (
     <>
       <GoldThemeLock />
@@ -39,9 +45,9 @@ export default function AccueilEpurePage() {
 
       {/* La marge basse laisse la place à la barre d'action mobile. */}
       <main id="contenu" className="pb-24 lg:pb-0">
-        <HeroEpure />
-        <LawyersSpotlight />
-        <GuidesLibrary />
+        <HeroEpure lawyers={home.lawyers} guides={home.guides} stats={home.stats} />
+        <LawyersSpotlight lawyers={home.lawyers} stats={home.stats} />
+        <GuidesLibrary guides={home.guides} stats={home.stats} />
         <HowItWorksEpure />
       </main>
 

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { buttonStyles } from "@/components/ui/button";
 import { Rating } from "@/components/ui/rating";
-import { featuredLawyers, liveCounters } from "@/lib/data/home";
+import { groupDigits } from "@/lib/utils";
+import type { DirectoryEntry, PlatformStats } from "@/lib/api/public";
 import {
   IconArrowRight,
   IconBadgeCheck,
@@ -18,7 +19,15 @@ import {
  * superposées à droite. Les verts de la maquette sont transposés dans la
  * palette du projet (or / ambre, marine pour les surfaces profondes).
  */
-export function HeroSection() {
+export function HeroSection({
+  lawyers,
+  stats,
+}: {
+  lawyers: DirectoryEntry[];
+  stats: PlatformStats;
+}) {
+  const online = lawyers.filter((lawyer) => lawyer.online).length;
+
   return (
     <section className="relative isolate overflow-hidden bg-panel pt-12 pb-32 lg:pt-16 lg:pb-44">
       <HeroBackdrop />
@@ -33,7 +42,9 @@ export function HeroSection() {
                 <span className="size-2.5 rounded-full bg-trust-500" />
               </span>
               <span className="font-medium">
-                {liveCounters.lawyersOnline} avocats en ligne maintenant
+                {online > 0
+                  ? `${online} ${online > 1 ? "avocats" : "avocat"} en ligne maintenant`
+                  : `${groupDigits(stats.directory)} avocats et cabinets vérifiés`}
               </span>
             </p>
 
@@ -96,17 +107,19 @@ export function HeroSection() {
             <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-3">
-                  {featuredLawyers.slice(0, 4).map((lawyer) => (
+                  {lawyers.slice(0, 4).map((lawyer) => (
                     <span key={lawyer.slug} className="rounded-full ring-2 ring-panel">
-                      <Avatar initials={lawyer.initials} size="sm" />
+                      <Avatar initials={lawyer.initials} imageUrl={lawyer.avatarUrl} size="sm" />
                     </span>
                   ))}
                   <span className="grid size-9 place-items-center rounded-full bg-gold-500 text-[0.7rem] font-bold text-marine-950 ring-2 ring-panel">
-                    +7k
+                    +{Math.max(0, stats.directory - 4)}
                   </span>
                 </div>
                 <p className="text-sm/tight text-marine-600">
-                  <span className="font-semibold text-marine-950">7 000+ avocats</span>
+                  <span className="font-semibold text-marine-950">
+                    {groupDigits(stats.directory)} avocats
+                  </span>
                   <br />
                   déjà répertoriés
                 </p>
@@ -115,14 +128,16 @@ export function HeroSection() {
               <span className="hidden h-10 w-px bg-marine-950/12 sm:block" aria-hidden="true" />
 
               <div>
-                <Rating value={4.9} />
-                <p className="mt-0.5 text-sm text-marine-600">sur 3 400 avis certifiés</p>
+                <Rating value={stats.averageRating} />
+                <p className="mt-0.5 text-sm text-marine-600">
+                  sur {groupDigits(stats.reviews)} avis certifiés
+                </p>
               </div>
             </div>
           </div>
 
           {/* ---------------- Colonne visuelle ---------------- */}
-          <HeroVisual />
+          <HeroVisual lawyer={lawyers[0]} stats={stats} />
         </div>
       </div>
     </section>
@@ -156,9 +171,18 @@ function HeroBackdrop() {
   );
 }
 
-/** Cartes flottantes, posées devant l'illustration. */
-function HeroVisual() {
-  const lawyer = featuredLawyers[0];
+/**
+ * Cartes flottantes, posées devant l'illustration.
+ *
+ * La carte principale met en scène un praticien réel de l'annuaire, avec sa
+ * note et son délai de réponse. Le message affiché reste illustratif : c'est
+ * une maquette de conversation, pas un échange qui a eu lieu — et il ne
+ * pourrait pas l'être, puisque les échanges sont couverts par le secret.
+ */
+function HeroVisual({ lawyer, stats }: { lawyer?: DirectoryEntry; stats: PlatformStats }) {
+  // Annuaire vide ou backend injoignable : la colonne visuelle disparaît
+  // plutôt que d'afficher une fiche fantôme.
+  if (!lawyer) return null;
 
   return (
     <div className=" relative mx-auto w-full max-w-md lg:max-w-none">
@@ -167,16 +191,21 @@ function HeroVisual() {
         <div className="rounded-[1.15rem] bg-white p-5 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <Avatar initials={lawyer.initials} size="lg" online={lawyer.online} />
+              <Avatar
+                initials={lawyer.initials}
+                imageUrl={lawyer.avatarUrl}
+                size="lg"
+                online={lawyer.online}
+              />
               <div>
                 <p className="flex items-center gap-1.5 font-serif text-lg font-bold text-marine-950">
                   {lawyer.name}
                   <IconBadgeCheck className="size-4.5 text-gold-500" />
                 </p>
                 <p className="text-sm text-marine-500">
-                  {lawyer.specialties[0]} · {lawyer.city}
+                  {lawyer.specialties[0] ?? lawyer.subtitle} · {lawyer.city}
                 </p>
-                <Rating value={lawyer.rating} reviews={lawyer.reviews} className="mt-1.5" />
+                <Rating value={lawyer.rating} reviews={lawyer.reviewsCount} className="mt-1.5" />
               </div>
             </div>
             <span className="hidden shrink-0 rounded-full bg-trust-500/10 px-2.5 py-1 text-[0.7rem] font-semibold text-trust-600 ring-1 ring-trust-500/25 ring-inset sm:block">
@@ -215,9 +244,9 @@ function HeroVisual() {
         </span>
         <span className="text-sm/tight text-marine-200">
           <span className="block font-bold text-white">
-            {liveCounters.needsSolvedToday} besoins résolus
+            {groupDigits(stats.guides)} guides publiés
           </span>
-          aujourd’hui
+          par des avocats vérifiés
         </span>
       </div>
 
@@ -225,9 +254,9 @@ function HeroVisual() {
       <div className="animate-fade-up absolute -right-3 -bottom-10 hidden items-center gap-2.5 rounded-2xl bg-gold-500 px-4 py-3 shadow-gold lg:flex [animation-delay:500ms]">
         <IconSparkles className="size-4.5 text-marine-950" />
         <span className="text-sm/tight font-semibold text-marine-950">
-          Réponse moyenne
+          Note moyenne
           <span className="block text-lg leading-none">
-            {liveCounters.averageResponse}
+            {stats.averageRating > 0 ? `${stats.averageRating}/5` : "—"}
           </span>
         </span>
       </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { specialties } from "@/lib/data/home";
+import { practiceAreas } from "@/lib/data/practice-areas";
 import {
   IconFacebook,
   IconLinkedin,
@@ -16,7 +16,7 @@ const columns = [
       { label: "Poser mon besoin", href: "/besoin/nouveau" },
       { label: "Trouver un avocat", href: "/avocats" },
       { label: "Guides & articles", href: "/guides" },
-      { label: "Comment ça marche", href: "/#comment-ca-marche" },
+      { label: "Comment ça marche", href: "/comment-ca-marche" },
       { label: "Diagnostic rapide", href: "/#diagnostic" },
     ],
   },
@@ -120,19 +120,24 @@ export function SiteFooter() {
           </div>
         </div>
 
-        {/* Domaines — maillage interne pour le SEO (module 3.3) */}
+        {/* Domaines — maillage interne pour le SEO (module 3.3). Les liens
+            pointent vers les pages d'atterrissage et non vers l'annuaire
+            filtré : une page de domaine porte du contenu indexable, une URL à
+            paramètres n'en porte aucun. */}
         <div className="mt-14 border-t border-marine-950/10 pt-8">
           <p className="text-[0.7rem] font-bold tracking-[0.18em] text-marine-950 uppercase">
-            Domaines du droit
+            <Link href="/domaines" className="transition-colors hover:text-gold-700">
+              Domaines du droit
+            </Link>
           </p>
           <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-            {specialties.map((specialty) => (
-              <li key={specialty}>
+            {practiceAreas.map((area) => (
+              <li key={area.slug}>
                 <Link
-                  href={`/avocats?domaine=${encodeURIComponent(specialty)}`}
+                  href={`/domaines/${area.slug}`}
                   className="text-sm transition-colors hover:text-gold-700"
                 >
-                  {specialty}
+                  {area.title}
                 </Link>
               </li>
             ))}

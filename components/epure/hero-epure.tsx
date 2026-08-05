@@ -4,7 +4,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { buttonStyles } from "@/components/ui/button";
 import { Rating } from "@/components/ui/rating";
 import { FeaturedGuideSlide } from "@/components/epure/featured-guide-slide";
-import { liveCounters, spotlightLawyers } from "@/lib/data/home";
+import { groupDigits } from "@/lib/utils";
+import type { DirectoryEntry, GuideSummary, PlatformStats } from "@/lib/api/public";
 import { IconArrowRight, IconFileText, IconSend } from "@/components/ui/icons";
 
 /**
@@ -16,7 +17,17 @@ import { IconArrowRight, IconFileText, IconSend } from "@/components/ui/icons";
  * flottante — et remplace les deux boutons par les deux cartes d'action du
  * cahier des charges. La colonne visuelle accueille le guide en vedette.
  */
-export function HeroEpure() {
+export function HeroEpure({
+  lawyers,
+  guides,
+  stats,
+}: {
+  lawyers: DirectoryEntry[];
+  guides: GuideSummary[];
+  stats: PlatformStats;
+}) {
+  const online = lawyers.filter((lawyer) => lawyer.online).length;
+
   return (
     <section className="relative isolate overflow-hidden bg-panel pt-12 pb-28 lg:pt-16 lg:pb-36">
       <HeroBackdrop />
@@ -31,7 +42,9 @@ export function HeroEpure() {
                 <span className="size-2.5 rounded-full bg-trust-500" />
               </span>
               <span className="font-medium">
-                {liveCounters.lawyersOnline} avocats en ligne maintenant
+                {online > 0
+                  ? `${online} ${online > 1 ? "avocats" : "avocat"} en ligne maintenant`
+                  : `${groupDigits(stats.directory)} avocats et cabinets vérifiés`}
               </span>
             </p>
 
@@ -88,18 +101,22 @@ export function HeroEpure() {
             <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-3">
-                  {spotlightLawyers.slice(0, 4).map((lawyer) => (
+                  {lawyers.slice(0, 4).map((lawyer) => (
                     <span
                       key={lawyer.slug}
                       className="rounded-full ring-2 ring-panel"
                     >
-                      <Avatar initials={lawyer.initials} size="sm" />
+                      <Avatar
+                        initials={lawyer.initials}
+                        imageUrl={lawyer.avatarUrl}
+                        size="sm"
+                      />
                     </span>
                   ))}
                 </div>
                 <p className="text-sm text-marine-600">
                   <span className="font-semibold text-marine-950">
-                    7 000+ avocats
+                    {groupDigits(stats.directory)} avocats
                   </span>{" "}
                   répertoriés
                 </p>
@@ -111,14 +128,16 @@ export function HeroEpure() {
               />
 
               <div className="flex items-center gap-2">
-                <Rating value={4.9} />
-                <p className="text-sm text-marine-600">sur 3 400 avis certifiés</p>
+                <Rating value={stats.averageRating} />
+                <p className="text-sm text-marine-600">
+                  sur {groupDigits(stats.reviews)} avis certifiés
+                </p>
               </div>
             </div>
           </div>
 
           {/* ---------------- Colonne visuelle ---------------- */}
-          <FeaturedGuideSlide />
+          <FeaturedGuideSlide guides={guides} />
         </div>
       </div>
     </section>

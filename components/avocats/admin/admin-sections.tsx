@@ -1,127 +1,21 @@
 "use client";
 
-import { Avatar } from "@/components/ui/avatar";
 import { buttonStyles } from "@/components/ui/button";
-import { Rating } from "@/components/ui/rating";
-import { TextArea } from "@/components/ui/form";
 import { AdminCard } from "@/components/avocats/admin/admin-ui";
 import { cn } from "@/lib/utils";
 import { plans } from "@/lib/avocats/signup";
 import type { LawyerProfile } from "@/lib/data/lawyer-profile";
-import {
-  IconBadgeCheck,
-  IconCheck,
-  IconCrown,
-  IconPencil,
-  IconSend,
-  IconStar,
-} from "@/components/ui/icons";
+import { IconCheck, IconCrown } from "@/components/ui/icons";
 
 /**
- * Sections de l'espace de gestion qui restent en lecture seule.
+ * Section « Abonnement » de l'espace de gestion.
  *
- * Les autres — compte, vitrine, galerie, guides, prestations — vivent chacune
- * dans son fichier, avec son état et ses appels réseau. Avis et abonnement
- * n'écrivent rien pour l'instant : la réponse aux avis et le changement de
- * formule passeront par des endpoints déjà exposés par le plugin, mais qui
- * demandent d'abord une décision produit sur la facturation.
+ * Les autres — compte, vitrine, galerie, guides, prestations, avis — vivent
+ * chacune dans son fichier, avec son état et ses appels réseau. Celle-ci reste
+ * en lecture seule : le changement de formule engage une facturation, et le
+ * module 6 n'est pas livré. Un bouton qui prélèverait sans passerelle de
+ * paiement serait pire que pas de bouton du tout.
  */
-
-/* -------------------------------------------------------------------------- */
-/* Avis                                                                       */
-/* -------------------------------------------------------------------------- */
-
-export function SectionAvis({ profile }: { profile: LawyerProfile }) {
-  return (
-    <div className="space-y-5">
-      <AdminCard
-        title="Réputation"
-        description="Les avis ne sont collectés qu’après une consultation réelle et ne peuvent pas être supprimés — vous pouvez y répondre."
-      >
-        <div className="flex flex-wrap items-center gap-6">
-          <div>
-            <p className="font-serif text-4xl font-bold text-marine-950">
-              {profile.rating.toFixed(1).replace(".", ",")}
-            </p>
-            <Rating value={profile.rating} className="mt-1" />
-          </div>
-          <div className="text-sm text-marine-600">
-            <p>
-              <span className="font-semibold text-marine-950">
-                {profile.reviewsCount} avis
-              </span>{" "}
-              certifiés
-            </p>
-            <p className="mt-1">
-              <span className="font-semibold text-marine-950">
-                {profile.reviews.filter((r) => r.reply).length}
-              </span>{" "}
-              réponses publiées
-            </p>
-          </div>
-        </div>
-      </AdminCard>
-
-      {profile.reviews.length === 0 && (
-        <AdminCard title="Aucun avis pour l’instant">
-          <p className="flex items-start gap-2.5 rounded-2xl bg-marine-50 p-4 text-sm/relaxed text-marine-700">
-            <IconStar className="mt-0.5 size-4.5 shrink-0 text-marine-400" />
-            Les avis arrivent après vos premières consultations passées par la
-            plateforme. Ils sont vérifiés avant publication.
-          </p>
-        </AdminCard>
-      )}
-
-      {profile.reviews.map((review) => (
-        <AdminCard key={review.id} title={review.author}>
-          <div className="-mt-3 flex flex-wrap items-center gap-3">
-            <Avatar initials={review.initials} size="sm" />
-            <Rating value={review.rating} />
-            <span className="text-xs text-marine-500">
-              {review.context} · {review.date}
-            </span>
-          </div>
-
-          <p className="mt-4 text-sm/relaxed text-marine-700">{review.quote}</p>
-
-          {review.reply ? (
-            <div className="mt-4 rounded-xl bg-marine-50 p-4">
-              <p className="mb-1 flex items-center justify-between gap-3 text-xs font-bold tracking-wide text-marine-900 uppercase">
-                <span className="inline-flex items-center gap-1.5">
-                  <IconBadgeCheck className="size-3.5 text-gold-500" />
-                  Votre réponse publiée
-                </span>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 text-[0.7rem] font-semibold text-gold-700 normal-case hover:underline"
-                >
-                  <IconPencil className="size-3.5" />
-                  Modifier
-                </button>
-              </p>
-              <p className="text-sm/relaxed text-marine-700">{review.reply}</p>
-            </div>
-          ) : (
-            <div className="mt-4">
-              <TextArea
-                aria-label={`Répondre à ${review.author}`}
-                placeholder="Répondre publiquement — sans jamais évoquer le contenu du dossier."
-                className="min-h-24"
-              />
-              <button
-                type="button"
-                className={buttonStyles({ size: "sm", className: "mt-3" })}
-              >
-                <IconSend className="size-4" />
-                Publier ma réponse
-              </button>
-            </div>
-          )}
-        </AdminCard>
-      ))}
-    </div>
-  );
-}
 
 /* -------------------------------------------------------------------------- */
 /* Abonnement                                                                 */

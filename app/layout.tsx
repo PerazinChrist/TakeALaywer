@@ -61,8 +61,18 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  /* TEMPORAIRE — `suppressHydrationWarning` : le script anti-flash plus bas pose
+     `data-theme` sur <html> avant l'hydratation, donc l'attribut existe côté
+     client sans figurer dans le HTML du serveur. Sans cette annonce, React tient
+     l'écart pour une erreur d'hydratation, jette le HTML serveur et refait tout
+     le rendu côté client — d'où l'avertissement sur le <script>. À supprimer
+     avec le sélecteur de thème. */
   return (
-    <html lang="fr" className={`${playfair.variable} ${inter.variable}`}>
+    <html
+      lang="fr"
+      suppressHydrationWarning
+      className={`${playfair.variable} ${inter.variable}`}
+    >
       <body className="bg-white font-sans text-marine-950">
         {/* TEMPORAIRE — applique le thème choisi avant le premier rendu pour
             éviter un flash. À supprimer avec le sélecteur. */}

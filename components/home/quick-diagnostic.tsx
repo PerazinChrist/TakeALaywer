@@ -5,8 +5,10 @@ import Link from "next/link";
 import { buttonStyles } from "@/components/ui/button";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { OrientationSkeleton } from "@/components/ui/skeleton";
-import { diagnosticSteps, liveCounters, type DiagnosticOption } from "@/lib/data/home";
-import { cn } from "@/lib/utils";
+import { diagnosticSteps, type DiagnosticOption } from "@/lib/data/home";
+import { facetMap } from "@/lib/utils";
+import type { Facet, PlatformStats } from "@/lib/api/public";
+import { cn, groupDigits } from "@/lib/utils";
 import {
   IconArrowRight,
   IconCheck,
@@ -60,10 +62,21 @@ function buildOrientation(answers: DiagnosticOption[]): Orientation {
 
 /**
  * Composant « Diagnostic Rapide » — directive-ui.md § 1.
- * Mini-questionnaire en 3 clics qui oriente vers les articles ou les avocats.
+ *
+ * Mini-questionnaire en 3 clics qui oriente vers les guides ou les avocats. Les
+ * questions sont éditoriales ; les effectifs annoncés sous chaque domaine sont
+ * comptés en base, sans quoi le diagnostic promettrait des avocats qui
+ * n'existent pas.
  */
-export function QuickDiagnostic() {
+export function QuickDiagnostic({
+  specialties,
+  stats,
+}: {
+  specialties: Facet[];
+  stats: PlatformStats;
+}) {
   const [answers, setAnswers] = useState<DiagnosticOption[]>([]);
+  const counts = facetMap(specialties);
 
   const index = answers.length;
   const done = index >= diagnosticSteps.length;
@@ -103,7 +116,10 @@ export function QuickDiagnostic() {
               {[
                 { icon: IconIncognito, text: "Aucune inscription, aucune donnée personnelle" },
                 { icon: IconClock, text: "Moins de 30 secondes" },
-                { icon: IconUsers, text: `${liveCounters.lawyersOnline} avocats connectés en ce moment` },
+                {
+                  icon: IconUsers,
+                  text: `${groupDigits(stats.directory)} avocats et cabinets vérifiés`,
+                },
               ].map(({ icon: Icon, text }) => (
                 <li key={text} className="flex items-center gap-3 text-marine-700">
                   <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-gold-50 text-gold-600 ring-1 ring-gold-500/15 ring-inset">
@@ -160,9 +176,9 @@ export function QuickDiagnostic() {
                           <span className="block text-[0.95rem] font-semibold text-marine-900">
                             {option.label}
                           </span>
-                          {option.lawyers !== undefined && (
+                          {index === 0 && (
                             <span className="mt-0.5 block text-xs text-marine-500">
-                              {option.lawyers} avocats disponibles
+                              {counts[option.meta] ?? 0} avocats disponibles
                             </span>
                           )}
                         </span>
@@ -182,7 +198,7 @@ export function QuickDiagnostic() {
                   )}
                 </div>
               ) : (
-                <DiagnosticResult answers={answers} />
+                <DiagnosticResult answers={answers} counts={counts} stats={stats} />
               )}
             </div>
           </div>
@@ -192,7 +208,15 @@ export function QuickDiagnostic() {
   );
 }
 
-function DiagnosticResult({ answers }: { answers: DiagnosticOption[] }) {
+function DiagnosticResult({
+  answers,
+  counts,
+  stats,
+}: {
+  answers: DiagnosticOption[];
+  counts: Record<string, number>;
+  stats: PlatformStats;
+}) {
   // Court temps d'analyse simule le routage vers la bonne specialite et evite
   // un basculement brutal de l'interface — directive-ui.md § 5.
   const [analyzing, setAnalyzing] = useState(true);
@@ -252,17 +276,17 @@ function DiagnosticResult({ answers }: { answers: DiagnosticOption[] }) {
       <div className="mt-6 grid gap-3 rounded-2xl bg-marine-50 p-4 sm:grid-cols-3">
         <Metric
           icon={<IconUsers className="size-4" />}
-          value={`${domain.lawyers ?? 0}`}
+          value={`${counts[domain.meta] ?? 0}`}
           label="avocats du domaine"
         />
         <Metric
           icon={<IconClock className="size-4" />}
-          value={liveCounters.averageResponse}
-          label="réponse moyenne"
+          value={stats.averageRating > 0 ? `${stats.averageRating}/5` : "—"}
+          label="note moyenne"
         />
         <Metric
           icon={<IconFileText className="size-4" />}
-          value="24"
+          value={groupDigits(stats.guides)}
           label="guides disponibles"
         />
       </div>

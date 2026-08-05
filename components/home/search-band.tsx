@@ -64,8 +64,11 @@ export function SearchBand() {
             </h2>
 
             <form action="/avocats" method="get" className="mt-5 flex flex-col gap-3 md:flex-row">
+              {/* Les noms de champs sont ceux que lit `/avocats` : « domaine »
+                  et « ville ». Le pied de page et le diagnostic construisent
+                  déjà leurs liens avec ces clés. */}
               <Field
-                id="specialite"
+                id="domaine"
                 label="Domaine du droit"
                 icon={<IconScale className="size-4.5" />}
               >

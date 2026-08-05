@@ -3,7 +3,8 @@ import { AutoCarousel } from "@/components/epure/auto-carousel";
 import { buttonStyles } from "@/components/ui/button";
 import { Rating } from "@/components/ui/rating";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { spotlightLawyers, type SpotlightLawyer } from "@/lib/data/home";
+import { groupDigits } from "@/lib/utils";
+import type { DirectoryEntry, PlatformStats } from "@/lib/api/public";
 import {
   IconBadgeCheck,
   IconChevronRight,
@@ -15,10 +16,18 @@ import {
  * ÉCRAN 2 — « Avocats à la Une ».
  *
  * Une seule ligne de cartes qui défile toute seule : la section met en valeur
- * les praticiens sans saturer la page. Emplacement commercialisé — seuls les
- * abonnés Premium et Pionnier y figurent (voir `spotlightLawyers`).
+ * les praticiens sans saturer la page. Emplacement commercialisé : le tri
+ * « featured » de l’annuaire fait remonter les abonnés Pionnier puis Premium.
  */
-export function LawyersSpotlight() {
+export function LawyersSpotlight({
+  lawyers,
+  stats,
+}: {
+  lawyers: DirectoryEntry[];
+  stats: PlatformStats;
+}) {
+  if (lawyers.length === 0) return null;
+
   return (
     <section className="bg-white py-20 lg:py-28" aria-labelledby="avocats-une">
       <div className="container-page">
@@ -33,7 +42,7 @@ export function LawyersSpotlight() {
       </div>
 
       <AutoCarousel label="Avocats recommandés" className="mt-14">
-        {spotlightLawyers.map((lawyer) => (
+        {lawyers.map((lawyer) => (
           <LawyerCard key={lawyer.slug} lawyer={lawyer} />
         ))}
       </AutoCarousel>
@@ -43,7 +52,7 @@ export function LawyersSpotlight() {
           href="/avocats"
           className={buttonStyles({ variant: "outline", size: "md" })}
         >
-          Voir les 7 000 avocats
+          Voir les {groupDigits(stats.directory)} avocats
           {/* Le libellé complet ne rentre pas sur les très petits écrans. */}
           <span className="hidden sm:inline">de l’annuaire</span>
           <IconChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" />
@@ -55,7 +64,7 @@ export function LawyersSpotlight() {
 
 /* -------------------------------------------------------------------------- */
 
-function LawyerCard({ lawyer }: { lawyer: SpotlightLawyer }) {
+function LawyerCard({ lawyer }: { lawyer: DirectoryEntry }) {
   return (
     <li className="w-[17.5rem] shrink-0 sm:w-[19rem]">
       <article className="group flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-marine-950/6 transition-transform duration-300 hover:-translate-y-1">
@@ -97,7 +106,7 @@ function LawyerCard({ lawyer }: { lawyer: SpotlightLawyer }) {
           )}
 
           <p className="mt-3 text-sm font-medium text-marine-700">
-            {lawyer.specialty}
+            {lawyer.specialties.slice(0, 2).join(" & ") || lawyer.subtitle}
           </p>
 
           <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-marine-500">
@@ -105,12 +114,16 @@ function LawyerCard({ lawyer }: { lawyer: SpotlightLawyer }) {
             {lawyer.city} · {lawyer.bar}
           </p>
 
-          <Rating
-            value={lawyer.rating}
-            reviews={lawyer.reviews}
-            className="mt-4"
-            compact
-          />
+          {lawyer.reviewsCount > 0 ? (
+            <Rating
+              value={lawyer.rating}
+              reviews={lawyer.reviewsCount}
+              className="mt-4"
+              compact
+            />
+          ) : (
+            <p className="mt-4 text-sm text-marine-400">Pas encore d’avis</p>
+          )}
 
           <Link
             href={`/avocats/${lawyer.slug}`}

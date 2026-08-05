@@ -6,7 +6,8 @@ import { buttonStyles } from "@/components/ui/button";
 import { Rating } from "@/components/ui/rating";
 import { Avatar } from "@/components/ui/avatar";
 import { AdminCard, StatCard } from "@/components/avocats/admin/admin-ui";
-import { SectionAbonnement, SectionAvis } from "@/components/avocats/admin/admin-sections";
+import { SectionAbonnement } from "@/components/avocats/admin/admin-sections";
+import { SectionAvis } from "@/components/avocats/admin/section-avis";
 import { SectionCompte } from "@/components/avocats/admin/section-compte";
 import { SectionGalerie } from "@/components/avocats/admin/section-galerie";
 import { SectionGuides } from "@/components/avocats/admin/section-guides";
@@ -19,7 +20,12 @@ import {
 import { ProfileCover } from "@/components/avocats/vitrine/profile-cover";
 import { cn } from "@/lib/utils";
 import type { LawyerProfile } from "@/lib/data/lawyer-profile";
-import { accountStatusLabels, type ApiAccount, type ApiDocument } from "@/lib/api/types";
+import {
+  accountStatusLabels,
+  type ApiAccount,
+  type ApiDocument,
+  type ReviewsResult,
+} from "@/lib/api/types";
 import {
   IconAlert,
   IconArrowRight,
@@ -118,11 +124,14 @@ export function PractitionerSpace({
   profile: initialProfile,
   account: initialAccount,
   documents = [],
+  reviews = { items: [], counts: {}, average: 0 },
 }: {
   profile: LawyerProfile;
   /** Absent en démonstration statique ; présent dès qu'une session est ouverte. */
   account?: ApiAccount;
   documents?: ApiDocument[];
+  /** Avis reçus, modération comprise. Chargés côté serveur avec la page. */
+  reviews?: ReviewsResult;
 }) {
   const [section, setSection] = useState<string>("tableau");
   const [profile, setProfile] = useState(initialProfile);
@@ -215,6 +224,7 @@ export function PractitionerSpace({
         {section === "tableau" && (
           <SectionTableau
             profile={profile}
+            reviews={reviews}
             onNavigate={setSection}
             onVisualChange={(slot, url) =>
               patch(slot === "avatar" ? { avatarUrl: url } : { coverUrl: url })
@@ -266,7 +276,7 @@ export function PractitionerSpace({
           />
         )}
 
-        {section === "avis" && <SectionAvis profile={profile} />}
+        {section === "avis" && <SectionAvis initial={reviews} />}
         {section === "abonnement" && <SectionAbonnement profile={profile} />}
       </div>
     </div>
@@ -279,16 +289,21 @@ export function PractitionerSpace({
 
 function SectionTableau({
   profile,
+  reviews,
   onNavigate,
   onVisualChange,
 }: {
   profile: LawyerProfile;
+  reviews: ReviewsResult;
   onNavigate: (section: string) => void;
   onVisualChange: (slot: "avatar" | "couverture", url: string | null) => void;
 }) {
   const published = profile.guides.filter((g) => g.status === "publie").length;
   const photos = profile.albums.reduce((count, album) => count + album.photos.length, 0);
-  const pendingReplies = profile.reviews.filter((review) => !review.reply).length;
+
+  // Les avis en modération comptent aussi : la réponse se prépare avant la
+  // publication, pas après. `profile.reviews` ne porte que les avis publiés.
+  const pendingReplies = reviews.items.filter((review) => !review.reply).length;
 
   // La liste décrit l'état réel de la vitrine plutôt qu'un parcours figé : une
   // case cochée d'avance ne pousse personne à compléter quoi que ce soit.
@@ -428,7 +443,7 @@ function SectionTableau({
         </ul>
       </AdminCard>
 
-      {profile.reviews.length > 0 && (
+      {reviews.items.length > 0 && (
         <AdminCard
           title="Derniers avis"
           action={
@@ -443,7 +458,7 @@ function SectionTableau({
           }
         >
           <ul className="divide-y divide-marine-950/6">
-            {profile.reviews.slice(0, 3).map((review) => (
+            {reviews.items.slice(0, 3).map((review) => (
               <li key={review.id} className="flex items-start gap-3 py-3.5 first:pt-0 last:pb-0">
                 <Avatar initials={review.initials} size="sm" />
                 <div className="min-w-0 flex-1">

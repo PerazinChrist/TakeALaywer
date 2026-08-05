@@ -4,6 +4,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { buttonStyles } from "@/components/ui/button";
 import { Rating } from "@/components/ui/rating";
 import { PhotoTile } from "@/components/avocats/vitrine/photo-tile";
+import { ReviewForm } from "@/components/avocats/vitrine/review-form";
 import { cn, formatFcfa } from "@/lib/utils";
 import type {
   LawyerProfile,
@@ -539,12 +540,28 @@ export function PanelAvis({ profile }: { profile: LawyerProfile }) {
         </p>
       </SectionCard>
 
-      <SectionCard title={`Tous les avis · ${profile.reviews.length}`}>
-        <div className="space-y-4">
-          {profile.reviews.map((review) => (
-            <ReviewItem key={review.id} review={review} />
-          ))}
-        </div>
+      {profile.reviews.length > 0 ? (
+        <SectionCard title={`Tous les avis · ${profile.reviews.length}`}>
+          <div className="space-y-4">
+            {profile.reviews.map((review) => (
+              <ReviewItem key={review.id} review={review} />
+            ))}
+          </div>
+        </SectionCard>
+      ) : (
+        <SectionCard title="Aucun avis publié pour l’instant">
+          <p className="text-sm/relaxed text-marine-600">
+            Cette fiche n’a pas encore reçu d’avis vérifié. Si vous avez
+            travaillé avec ce praticien, votre retour aidera les prochains
+            visiteurs à se décider.
+          </p>
+        </SectionCard>
+      )}
+
+      {/* Dépôt d'un avis — le formulaire clôt le panneau plutôt que de l'ouvrir :
+          on lit d'abord ce que d'autres ont écrit, on écrit ensuite. */}
+      <SectionCard title="Vous avez consulté ce praticien ?">
+        <ReviewForm slug={profile.slug} name={profile.name} />
       </SectionCard>
     </div>
   );

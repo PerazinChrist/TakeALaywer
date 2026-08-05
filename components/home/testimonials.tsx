@@ -1,13 +1,17 @@
-import { Rating } from "@/components/ui/rating";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { certifiedReviews } from "@/lib/data/home";
-import { IconMapPin, IconQuote, IconShieldCheck } from "@/components/ui/icons";
+import { ReviewCard } from "@/components/public/review-card";
+import type { PublicReview } from "@/lib/api/public";
 
 /**
  * Encadrés d'avis certifiés — directive-ui.md § 3 / module 8.1.
- * Les avis ne sont collectés qu'après une interaction réelle citoyen ↔ avocat.
+ *
+ * Les avis affichés ici sont ceux que la modération a publiés et qui émanent
+ * d'un compte citoyen : la promesse « après une interaction réelle » est tenue
+ * par la requête, pas seulement par le texte de la section.
  */
-export function Testimonials() {
+export function Testimonials({ reviews }: { reviews: PublicReview[] }) {
+  if (reviews.length === 0) return null;
+
   return (
     <section className="bg-white py-20 lg:py-28" aria-labelledby="avis-titre">
       <div className="container-page">
@@ -19,39 +23,8 @@ export function Testimonials() {
         />
 
         <ul className="mt-14 grid gap-5 lg:grid-cols-3">
-          {certifiedReviews.map((review) => (
-            <li
-              key={review.id}
-              className="relative flex flex-col rounded-3xl border border-marine-950/8 bg-panel p-7"
-            >
-              <IconQuote
-                className="absolute top-6 right-6 size-8 text-gold-500/15"
-                aria-hidden="true"
-              />
-
-              <Rating value={review.rating} />
-
-              <blockquote className="mt-4 flex-1 text-[0.95rem]/relaxed text-marine-700">
-                « {review.quote} »
-              </blockquote>
-
-              <div className="mt-6 flex items-end justify-between gap-4 border-t border-marine-950/6 pt-4">
-                <div>
-                  <p className="font-semibold text-marine-950">{review.author}</p>
-                  <p className="mt-0.5 inline-flex items-center gap-1 text-sm text-marine-500">
-                    <IconMapPin className="size-3.5" />
-                    {review.city} · {review.context}
-                  </p>
-                </div>
-                <span
-                  className="inline-flex shrink-0 items-center gap-1 rounded-full bg-trust-500/10 px-2.5 py-1 text-[0.7rem] font-semibold text-trust-600"
-                  title="Avis vérifié après une interaction réelle"
-                >
-                  <IconShieldCheck className="size-3.5" />
-                  Certifié
-                </span>
-              </div>
-            </li>
+          {reviews.slice(0, 3).map((review) => (
+            <ReviewCard key={review.id} review={review} />
           ))}
         </ul>
       </div>
