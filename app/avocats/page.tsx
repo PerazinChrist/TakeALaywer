@@ -126,7 +126,11 @@ export default async function AvocatsPage({ searchParams }: { searchParams: Sear
           </div>
         </header>
 
-        <div className="container-page -mt-8 pb-16">
+        {/* `relative` n'est pas décoratif : l'en-tête ci-dessus est positionné,
+            donc peint après ce bloc statique et recouvrirait les deux
+            centimètres de carte que le `-mt-8` fait chevaucher. Positionner le
+            conteneur le remet dans l'ordre du document. */}
+        <div className="relative z-10 container-page -mt-8 pb-16">
           <FilterBar
             action="/avocats"
             search={query.search}

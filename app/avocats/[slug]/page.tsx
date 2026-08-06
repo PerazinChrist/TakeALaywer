@@ -8,6 +8,7 @@ import { ProfileSidebar } from "@/components/avocats/vitrine/profile-sidebar";
 import { VitrineBody } from "@/components/avocats/vitrine/vitrine-body";
 import { buttonStyles } from "@/components/ui/button";
 import { fetchVitrine } from "@/lib/api/vitrine";
+import { fetchCurrentClient } from "@/lib/api/citizen";
 import { IconAlert, IconPencil } from "@/components/ui/icons";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -49,11 +50,25 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
  */
 export default async function VitrinePage({ params }: Params) {
   const { slug } = await params;
-  const result = await fetchVitrine(slug);
+
+  const [result, session] = await Promise.all([fetchVitrine(slug), fetchCurrentClient()]);
 
   if (!result) notFound();
 
   const { profile, isOwner, isPreview } = result;
+
+  // Le corps de la vitrine est un composant client : il ne peut pas lire le
+  // cookie citoyen lui-même. On lui transmet le strict nécessaire — de quoi
+  // pré-remplir une réservation, et de quoi savoir si un avis peut être déposé.
+  const contact = session
+    ? {
+        name:
+          [session.client.firstName, session.client.lastName].filter(Boolean).join(" ") ||
+          session.client.pseudonym,
+        email: session.client.email,
+        phone: session.client.phone,
+      }
+    : null;
 
   return (
     <>
@@ -109,7 +124,12 @@ export default async function VitrinePage({ params }: Params) {
         )}
 
         <ProfileCover profile={profile} />
-        <VitrineBody profile={profile} sidebar={<ProfileSidebar profile={profile} />} />
+        <VitrineBody
+          profile={profile}
+          sidebar={<ProfileSidebar profile={profile} />}
+          session={{ signedIn: session !== null, contact }}
+          identity={contact ? { name: contact.name, email: contact.email } : null}
+        />
       </main>
 
       <SiteFooter />

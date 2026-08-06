@@ -6,8 +6,10 @@ import { buttonStyles } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   IconArrowRight,
+  IconBell,
   IconFacebook,
   IconLinkedin,
+  IconMessages,
   IconScale,
   IconSparkles,
   IconWhatsapp,
@@ -18,6 +20,7 @@ const navLinks = [
   { href: "/", label: "Accueil" },
   { href: "/avocats", label: "Avocats" },
   { href: "/guides", label: "Guides" },
+  { href: "/communaute", label: "Communauté" },
   { href: "/#comment-ca-marche", label: "Comment ça marche" },
 ];
 
@@ -34,12 +37,13 @@ const socialLinks = [
  * réseau » à quelqu'un qui a déjà un compte n'a pas de sens, et la page
  * d'inscription le renverrait de toute façon vers son espace.
  */
-function menuColumns(isSignedIn: boolean) {
+function menuColumns(isSignedIn: boolean, connected: boolean) {
   return [
     {
       title: "Citoyens",
       links: [
-        { href: "/besoin/nouveau", label: "Poser mon besoin" },
+        { href: "/besoin/nouveau", label: "Poser mon problème" },
+        { href: "/communaute", label: "Espace communautaire" },
         { href: "/avocats", label: "Trouver un avocat" },
         { href: "/guides", label: "Guides & articles" },
         { href: "/#diagnostic", label: "Diagnostic rapide" },
@@ -55,9 +59,27 @@ function menuColumns(isSignedIn: boolean) {
           ? []
           : [{ href: "/avocats/espace-praticien", label: "Espace praticien" }]),
         { href: "/tarifs", label: "Offre Pionnière" },
-        { href: "/avocats/publier", label: "Publier un guide" },
+        // Publier un guide se fait depuis l'espace praticien, section
+        // « Guides publiés » : il n'existe pas de page dédiée, et un lien mort
+        // dans le menu principal est pire qu'un lien un cran moins précis.
+        { href: "/avocats/espace-praticien", label: "Publier un guide" },
       ],
     },
+    // La troisième colonne n'a de contenu que pour quelqu'un de connecté :
+    // proposer « mes messages » à un visiteur anonyme le mènerait à un écran
+    // qui ne peut que lui redemander de se connecter.
+    ...(connected
+      ? [
+          {
+            title: "Mon activité",
+            links: [
+              { href: "/notifications", label: "Mes notifications" },
+              { href: "/messages", label: "Mes messages" },
+              { href: "/compte", label: "Mon espace personnel" },
+            ],
+          },
+        ]
+      : []),
   ];
 }
 
@@ -75,9 +97,15 @@ function menuColumns(isSignedIn: boolean) {
 export function SiteHeader({
   isSignedIn = false,
   clientSignedIn = false,
+  notifications = 0,
+  messages = 0,
 }: {
   isSignedIn?: boolean;
   clientSignedIn?: boolean;
+  /** Notifications non lues, tous versants confondus. Résolu côté serveur. */
+  notifications?: number;
+  /** Messages non lus, tous versants confondus. */
+  messages?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -152,7 +180,33 @@ export function SiteHeader({
           </nav>
 
           {/* Pastilles rondes des réseaux, puis bouton menu */}
-          <div className="flex items-center gap-7">
+          <div className="flex items-center gap-4 lg:gap-7">
+            {(isSignedIn || clientSignedIn) && (
+              <div className="flex items-center gap-1">
+                {messages > 0 && (
+                  <BadgeLink
+                    href="/messages"
+                    label={`Messages — ${messages} non lu${messages > 1 ? "s" : ""}`}
+                    count={messages}
+                  >
+                    <IconMessages className="size-5" />
+                  </BadgeLink>
+                )}
+
+                <BadgeLink
+                  href="/notifications"
+                  label={
+                    notifications > 0
+                      ? `Notifications — ${notifications} non lue${notifications > 1 ? "s" : ""}`
+                      : "Notifications"
+                  }
+                  count={notifications}
+                >
+                  <IconBell className="size-5" />
+                </BadgeLink>
+              </div>
+            )}
+
             <div className="hidden items-center gap-2 md:flex">
               {socialLinks.map(({ href, label, Icon }) => (
                 <a
@@ -186,8 +240,17 @@ export function SiteHeader({
             id="menu-principal"
             className="animate-fade-up border-b border-marine-950/8 bg-white shadow-card"
           >
-            <div className="container-page grid gap-8 py-8 md:grid-cols-3 lg:gap-12 lg:py-10">
-              {menuColumns(isSignedIn).map((column) => (
+            {/* Une colonne de plus quand la personne est connectée : la grille
+                suit, sinon la quatrième carte tomberait seule sur un rang. */}
+            <div
+              className={cn(
+                "container-page grid gap-8 py-8 lg:gap-12 lg:py-10",
+                isSignedIn || clientSignedIn
+                  ? "sm:grid-cols-2 lg:grid-cols-4"
+                  : "md:grid-cols-3",
+              )}
+            >
+              {menuColumns(isSignedIn, isSignedIn || clientSignedIn).map((column) => (
                 <nav key={column.title} aria-label={column.title}>
                   <p className="rule-gold text-[0.7rem] font-bold tracking-[0.22em] text-gold-600 uppercase">
                     {column.title}
@@ -274,6 +337,43 @@ export function SiteHeader({
         </>
       )}
     </header>
+  );
+}
+
+/**
+ * Icône d'en-tête surmontée d'une pastille de compteur.
+ *
+ * Le compteur reste sous la barre de recherche visuelle : au-delà de neuf, la
+ * pastille afficherait un nombre plus large que l'icône qu'elle décore.
+ */
+function BadgeLink({
+  href,
+  label,
+  count,
+  children,
+}: {
+  href: string;
+  label: string;
+  count: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      className="relative grid size-10 shrink-0 place-items-center rounded-full text-marine-800 transition-colors hover:bg-white hover:text-gold-600"
+    >
+      {children}
+
+      {count > 0 && (
+        <span
+          aria-hidden="true"
+          className="absolute top-1 right-0.5 grid min-w-4.5 place-items-center rounded-full bg-gold-500 px-1 text-[0.65rem] font-bold text-marine-950 ring-2 ring-panel"
+        >
+          {count > 9 ? "9+" : count}
+        </span>
+      )}
+    </Link>
   );
 }
 

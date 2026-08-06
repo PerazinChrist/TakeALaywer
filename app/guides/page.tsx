@@ -125,7 +125,9 @@ export default async function GuidesPage({ searchParams }: { searchParams: Searc
           </div>
         </header>
 
-        <div className="container-page -mt-8 pb-16">
+        {/* Voir `app/avocats/page.tsx` : sans `relative`, l'en-tête positionné
+            ci-dessus recouvre la partie chevauchante de la carte de filtres. */}
+        <div className="relative z-10 container-page -mt-8 pb-16">
           <FilterBar
             action="/guides"
             search={query.search}

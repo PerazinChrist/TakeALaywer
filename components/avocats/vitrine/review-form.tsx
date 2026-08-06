@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Field, TextArea, TextInput } from "@/components/ui/form";
 import { buttonStyles } from "@/components/ui/button";
 import { postJson } from "@/lib/api/client";
@@ -12,28 +13,59 @@ import {
   IconSend,
   IconShieldCheck,
   IconStar,
+  IconUser,
 } from "@/components/ui/icons";
+
+/**
+ * Ce que la session citoyenne apporte au formulaire.
+ *
+ * `email` n'est jamais affiché sur la vitrine : il sert à rattacher l'avis au
+ * compte, ce qui le rend « certifié ». Il est envoyé, pas montré.
+ */
+export type ReviewIdentity = {
+  name: string;
+  email: string;
+};
 
 /**
  * Dépôt d'un avis sur la vitrine d'un praticien — module 8.1.
  *
- * L'avis part en modération et n'apparaît pas immédiatement : c'est dit avant
- * l'envoi, pas après. Un formulaire qui laisse croire à une publication
- * instantanée produit un second avis identique dix minutes plus tard, puis un
- * message de réclamation.
+ * Le formulaire n'est ouvert qu'aux comptes connectés. Ce n'est pas une
+ * commodité technique : un avis anonyme de passage n'engage rien, se duplique
+ * à volonté et ne peut pas être rattaché à une consultation réelle. La
+ * plateforme promet des avis certifiés — elle ne peut pas tenir cette promesse
+ * en acceptant des dépôts sans identité.
  *
- * L'adresse e-mail sert à rattacher l'avis à un compte citoyen existant, ce qui
- * le rend « certifié ». Elle n'est jamais affichée.
+ * Nom et adresse viennent donc de la session, pré-remplis. Le nom reste
+ * modifiable — beaucoup de gens signent « Emmanuel T. » plutôt que de leur
+ * état civil complet — mais l'adresse, elle, n'est pas saisie : c'est elle qui
+ * porte la certification, la laisser modifiable la viderait de son sens.
+ *
+ * L'avis part en modération, et c'est dit avant l'envoi, pas après : un
+ * formulaire qui laisse croire à une publication instantanée produit un second
+ * avis identique dix minutes plus tard, puis une réclamation.
  */
-export function ReviewForm({ slug, name }: { slug: string; name: string }) {
-  const { run, reset, pending, error, errors, done } = useAdminAction();
+export function ReviewForm({
+  slug,
+  name,
+  identity,
+}: {
+  slug: string;
+  name: string;
+  /** Identité du citoyen connecté, ou null s'il ne l'est pas. */
+  identity: ReviewIdentity | null;
+}) {
+  const { run, reset, pending, error, errors } = useAdminAction();
 
   const [rating, setRating] = useState(0);
-  const [author, setAuthor] = useState("");
-  const [email, setEmail] = useState("");
+  const [author, setAuthor] = useState(identity?.name ?? "");
   const [context, setContext] = useState("");
   const [quote, setQuote] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  if (identity === null) {
+    return <SignedOutNotice slug={slug} name={name} />;
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -41,7 +73,9 @@ export function ReviewForm({ slug, name }: { slug: string; name: string }) {
     const ok = await run(() =>
       postJson(`/api/avis/${slug}`, {
         author: author.trim(),
-        author_email: email.trim(),
+        // Jamais saisie : celle du compte, et elle seule, atteste que l'avis
+        // vient d'une personne enregistrée.
+        author_email: identity!.email,
         rating,
         context: context.trim(),
         quote: quote.trim(),
@@ -61,8 +95,12 @@ export function ReviewForm({ slug, name }: { slug: string; name: string }) {
           Merci pour votre avis
         </p>
         <p className="mx-auto mt-2 max-w-md text-sm/relaxed text-marine-600">
-          Il sera publié après vérification par notre équipe. Vous n’avez rien
-          d’autre à faire.
+          Il sera publié après vérification par notre équipe. Vous le retrouvez
+          en attendant dans{" "}
+          <Link href="/compte" className="font-semibold underline underline-offset-2">
+            votre espace personnel
+          </Link>
+          .
         </p>
       </div>
     );
@@ -73,7 +111,8 @@ export function ReviewForm({ slug, name }: { slug: string; name: string }) {
       <p className="flex items-start gap-2.5 rounded-xl bg-marine-50 p-4 text-sm/relaxed text-marine-700">
         <IconShieldCheck className="mt-0.5 size-4.5 shrink-0 text-trust-600" />
         Votre avis passe par une vérification avant d’apparaître sur la fiche de{" "}
-        {name}. Il ne pourra plus être modifié ensuite.
+        {name}. Il sera marqué « certifié » puisqu’il émane de votre compte, et
+        ne pourra plus être modifié ensuite.
       </p>
 
       <fieldset>
@@ -114,7 +153,13 @@ export function ReviewForm({ slug, name }: { slug: string; name: string }) {
       </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Votre nom" htmlFor="avis-auteur" required error={errors.author}>
+        <Field
+          label="Signature"
+          htmlFor="avis-auteur"
+          required
+          hint="Le nom affiché sous votre avis. Une initiale de famille suffit."
+          error={errors.author}
+        >
           <TextInput
             id="avis-auteur"
             value={author}
@@ -126,39 +171,21 @@ export function ReviewForm({ slug, name }: { slug: string; name: string }) {
         </Field>
 
         <Field
-          label="Votre e-mail"
-          htmlFor="avis-email"
+          label="Motif de la consultation"
+          htmlFor="avis-contexte"
           optional
-          hint="Jamais affiché. Sert à certifier l’avis si vous avez un compte."
-          error={errors.author_email}
+          hint="Par exemple : « Création de SARL »."
+          error={errors.context}
         >
           <TextInput
-            id="avis-email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="vous@exemple.cm"
-            invalid={Boolean(errors.author_email)}
-            autoComplete="email"
+            id="avis-contexte"
+            value={context}
+            onChange={(event) => setContext(event.target.value)}
+            placeholder="Création de SARL"
+            invalid={Boolean(errors.context)}
           />
         </Field>
       </div>
-
-      <Field
-        label="Motif de la consultation"
-        htmlFor="avis-contexte"
-        optional
-        hint="Par exemple : « Création de SARL » ou « Vérification de titre »."
-        error={errors.context}
-      >
-        <TextInput
-          id="avis-contexte"
-          value={context}
-          onChange={(event) => setContext(event.target.value)}
-          placeholder="Création de SARL"
-          invalid={Boolean(errors.context)}
-        />
-      </Field>
 
       <Field
         label="Votre expérience"
@@ -188,10 +215,60 @@ export function ReviewForm({ slug, name }: { slug: string; name: string }) {
         <IconSend className="size-4" />
         {pending ? "Envoi…" : "Publier mon avis"}
       </button>
-
-      {done && !submitted && (
-        <p className="text-sm text-trust-600">Avis envoyé.</p>
-      )}
     </form>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Écran servi au visiteur non connecté.
+ *
+ * Le formulaire n'est pas affiché grisé : laisser quelqu'un rédiger son avis
+ * avant de lui apprendre qu'il faut un compte est le meilleur moyen de perdre
+ * l'avis et la personne. Le retour est prévu — `?suite=` ramène sur la fiche.
+ */
+function SignedOutNotice({ slug, name }: { slug: string; name: string }) {
+  const suite = `/avocats/${slug}`;
+
+  return (
+    <div className="rounded-2xl border border-dashed border-marine-300 px-6 py-10 text-center">
+      <span
+        className="mx-auto grid size-12 place-items-center rounded-2xl bg-marine-50 text-marine-400"
+        aria-hidden="true"
+      >
+        <IconUser className="size-5" />
+      </span>
+
+      <p className="mt-4 font-serif text-lg font-bold text-marine-950">
+        Les avis sont réservés aux comptes vérifiés
+      </p>
+
+      <p className="mx-auto mt-2 max-w-md text-sm/relaxed text-marine-600">
+        C’est ce qui permet d’afficher « avis certifié » sous votre nom, et
+        d’écarter les faux avis déposés en série. Le compte est gratuit et prend
+        une minute.
+      </p>
+
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        <Link
+          href={`/compte/inscription?suite=${encodeURIComponent(suite)}`}
+          className={buttonStyles({ size: "sm" })}
+        >
+          Créer mon compte
+        </Link>
+        <Link
+          href={`/compte/connexion?suite=${encodeURIComponent(suite)}`}
+          className={buttonStyles({ variant: "outline", size: "sm" })}
+        >
+          J’ai déjà un compte
+        </Link>
+      </div>
+
+      <p className="mt-5 text-xs text-marine-500">
+        Vous avez consulté {name} ? Votre retour aidera les prochains visiteurs à
+        se décider.
+      </p>
+    </div>
   );
 }

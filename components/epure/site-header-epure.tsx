@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { buttonStyles } from "@/components/ui/button";
+import { NotificationBell } from "@/components/layout/notification-bell";
 import { fetchCurrentAccount } from "@/lib/api/account";
 import { fetchCurrentClient } from "@/lib/api/citizen";
 import { IconArrowRight, IconScale, IconUser } from "@/components/ui/icons";
@@ -16,10 +17,13 @@ import { IconArrowRight, IconScale, IconUser } from "@/components/ui/icons";
  * d'action en bas d'écran et par le pied de page.
  */
 const navLinks = [
-  { href: "/accueil-epure", label: "Accueil" },
+  // Vers l'accueil réel, et non vers la maquette « épurée » : ce lien est
+  // rendu sur toutes les pages publiques du site, pas seulement sur elle.
+  { href: "/", label: "Accueil" },
   { href: "/avocats", label: "Avocats" },
   { href: "/guides", label: "Guides" },
-  { href: "#comment-ca-marche", label: "Comment ça marche" },
+  { href: "/communaute", label: "Communauté" },
+  { href: "/comment-ca-marche", label: "Comment ça marche" },
 ];
 
 export async function SiteHeaderEpure() {
@@ -79,7 +83,11 @@ export async function SiteHeaderEpure() {
           ))}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          {/* La cloche ne se rend d'elle-même que pour un visiteur connecté :
+              inutile de la conditionner ici aussi. */}
+          <NotificationBell />
+
           {signedIn ? (
             /*
              * Connecté, quel que soit le versant : un seul accès, le sien.

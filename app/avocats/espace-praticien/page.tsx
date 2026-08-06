@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { PractitionerSpace } from "@/components/avocats/admin/practitioner-space";
-import { fetchCurrentAccount, fetchMyReviews } from "@/lib/api/account";
+import { fetchCurrentAccount, fetchMyBookings, fetchMyReviews } from "@/lib/api/account";
 import { toLawyerProfile } from "@/lib/api/profile";
 
 export const metadata: Metadata = {
@@ -25,7 +25,27 @@ const CONNEXION = "/avocats/connexion?suite=/avocats/espace-praticien";
  * navigateur, et une page protégée n'est pas envoyée puis masquée côté client —
  * elle n'est simplement pas rendue.
  */
-export default async function EspacePraticienPage() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+/** Sections que les notifications peuvent ouvrir directement. */
+const SECTIONS = new Set([
+  "tableau",
+  "compte",
+  "vitrine",
+  "justificatifs",
+  "galerie",
+  "guides",
+  "prestations",
+  "rendez-vous",
+  "avis",
+  "abonnement",
+]);
+
+export default async function EspacePraticienPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const session = await fetchCurrentAccount();
 
   if (!session) {
@@ -40,9 +60,16 @@ export default async function EspacePraticienPage() {
     redirect(CONNEXION);
   }
 
-  // Les avis en modération ne figurent pas dans `/auth/me` : ils demandent leur
-  // propre lecture, faite ici pour que la section s'ouvre déjà remplie.
-  const reviews = await fetchMyReviews();
+  // Les avis en modération et l'agenda ne figurent pas dans `/auth/me` : deux
+  // lectures propres, faites en parallèle pour que les sections s'ouvrent déjà
+  // remplies.
+  const [reviews, bookings, params] = await Promise.all([
+    fetchMyReviews(),
+    fetchMyBookings(),
+    searchParams,
+  ]);
+
+  const requested = Array.isArray(params.section) ? params.section[0] : params.section;
 
   return (
     <>
@@ -54,6 +81,9 @@ export default async function EspacePraticienPage() {
           account={session.account}
           documents={session.documents}
           reviews={reviews}
+          bookings={bookings}
+          unreadMessages={session.counters?.messages ?? 0}
+          initialSection={requested && SECTIONS.has(requested) ? requested : "tableau"}
         />
       </main>
 

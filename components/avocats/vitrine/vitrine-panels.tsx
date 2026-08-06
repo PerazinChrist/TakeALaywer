@@ -4,7 +4,11 @@ import { Avatar } from "@/components/ui/avatar";
 import { buttonStyles } from "@/components/ui/button";
 import { Rating } from "@/components/ui/rating";
 import { PhotoTile } from "@/components/avocats/vitrine/photo-tile";
-import { ReviewForm } from "@/components/avocats/vitrine/review-form";
+import { ReviewForm, type ReviewIdentity } from "@/components/avocats/vitrine/review-form";
+import {
+  ReserveButton,
+  type BookingSession,
+} from "@/components/avocats/vitrine/reserve-button";
 import { cn, formatFcfa } from "@/lib/utils";
 import type {
   LawyerProfile,
@@ -60,6 +64,10 @@ export function SectionCard({
   );
 }
 
+/** Les trois raccourcis de la boîte de contact partagent une seule apparence. */
+const actionStyles =
+  "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-marine-700 transition-colors hover:bg-marine-50";
+
 function SeeAll({ onClick, label }: { onClick: () => void; label: string }) {
   return (
     <button
@@ -84,7 +92,17 @@ const modeLabels = {
   document: { label: "Sur pièces", Icon: IconFileText },
 } as const;
 
-export function PrestationCard({ prestation }: { prestation: Prestation }) {
+export function PrestationCard({
+  prestation,
+  lawyerSlug,
+  lawyerName,
+  session,
+}: {
+  prestation: Prestation;
+  lawyerSlug: string;
+  lawyerName: string;
+  session: BookingSession;
+}) {
   const { label, Icon } = modeLabels[prestation.mode];
 
   return (
@@ -115,9 +133,12 @@ export function PrestationCard({ prestation }: { prestation: Prestation }) {
           </span>
           <span className="text-xs text-marine-500">{prestation.unit}</span>
         </p>
-        <span className={buttonStyles({ size: "sm", variant: "outline", className: "border-marine-950/15 group-hover:border-gold-500" })}>
-          Réserver
-        </span>
+        <ReserveButton
+          prestation={prestation}
+          lawyerSlug={lawyerSlug}
+          lawyerName={lawyerName}
+          session={session}
+        />
       </div>
     </article>
   );
@@ -225,9 +246,11 @@ export function ReviewItem({ review }: { review: ProfileReview }) {
 
 export function PanelApercu({
   profile,
+  session,
   onNavigate,
 }: {
   profile: LawyerProfile;
+  session: BookingSession;
   onNavigate: (tab: string) => void;
 }) {
   const published = profile.guides.filter((g) => g.status === "publie");
@@ -250,19 +273,36 @@ export function PanelApercu({
 
         <div className="mt-4 grid gap-2 border-t border-marine-950/6 pt-4 sm:grid-cols-3">
           {[
-            { label: "Poser une question", Icon: IconSend, tone: "text-gold-600", href: `/besoin/nouveau?avocat=${profile.slug}` },
-            { label: "Prendre rendez-vous", Icon: IconCalendar, tone: "text-trust-600", href: `/avocats/${profile.slug}/rendez-vous` },
-            { label: "Acheter un guide", Icon: IconFileText, tone: "text-marine-600", href: "#guides" },
+            {
+              label: "Poser une question",
+              Icon: IconSend,
+              tone: "text-gold-600",
+              href: `/besoin/nouveau?avocat=${profile.slug}`,
+            },
+            {
+              label: "Prendre rendez-vous",
+              Icon: IconCalendar,
+              tone: "text-trust-600",
+              href: `/avocats/${profile.slug}/rendez-vous`,
+            },
           ].map(({ label, Icon, tone, href }) => (
             <Link
               key={label}
               href={href}
-              className="flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-marine-700 transition-colors hover:bg-marine-50"
+              className={actionStyles}
             >
               <Icon className={cn("size-4.5", tone)} />
               {label}
             </Link>
           ))}
+
+          {/* Les guides sont un onglet de cette même page, pas une autre URL :
+              un lien d'ancrage pointerait vers un identifiant qui n'existe que
+              lorsque l'onglet est déjà ouvert. */}
+          <button type="button" onClick={() => onNavigate("guides")} className={actionStyles}>
+            <IconFileText className="size-4.5 text-marine-600" />
+            Voir les guides
+          </button>
         </div>
       </section>
 
@@ -276,7 +316,13 @@ export function PanelApercu({
         >
           <div className="grid gap-4 sm:grid-cols-2">
             {profile.prestations.slice(0, 4).map((prestation) => (
-              <PrestationCard key={prestation.id} prestation={prestation} />
+              <PrestationCard
+                key={prestation.id}
+                prestation={prestation}
+                lawyerSlug={profile.slug}
+                lawyerName={profile.name}
+                session={session}
+              />
             ))}
           </div>
         </SectionCard>
@@ -492,7 +538,14 @@ export function PanelGalerie({ profile }: { profile: LawyerProfile }) {
 /* Panneau « Avis »                                                           */
 /* -------------------------------------------------------------------------- */
 
-export function PanelAvis({ profile }: { profile: LawyerProfile }) {
+export function PanelAvis({
+  profile,
+  identity,
+}: {
+  profile: LawyerProfile;
+  /** Identité du citoyen connecté — le dépôt d'un avis l'exige. */
+  identity: ReviewIdentity | null;
+}) {
   const distribution = [5, 4, 3, 2, 1].map((star) => ({
     star,
     count: profile.reviews.filter((r) => Math.round(r.rating) === star).length,
@@ -561,7 +614,7 @@ export function PanelAvis({ profile }: { profile: LawyerProfile }) {
       {/* Dépôt d'un avis — le formulaire clôt le panneau plutôt que de l'ouvrir :
           on lit d'abord ce que d'autres ont écrit, on écrit ensuite. */}
       <SectionCard title="Vous avez consulté ce praticien ?">
-        <ReviewForm slug={profile.slug} name={profile.name} />
+        <ReviewForm slug={profile.slug} name={profile.name} identity={identity} />
       </SectionCard>
     </div>
   );

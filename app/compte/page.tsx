@@ -27,19 +27,41 @@ const CONNEXION = "/compte/connexion?suite=/compte";
  * navigateur, et une page protégée n'est pas envoyée puis masquée côté client —
  * elle n'est simplement pas rendue.
  */
-export default async function EspaceCitoyenPage() {
-  const session = await fetchCurrentClient();
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+/** Sections que les liens de notification peuvent ouvrir directement. */
+const SECTIONS = new Set([
+  "tableau",
+  "demandes",
+  "rendez-vous",
+  "guides",
+  "avis",
+  "activite",
+  "compte",
+]);
+
+export default async function EspaceCitoyenPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const [session, params] = await Promise.all([fetchCurrentClient(), searchParams]);
 
   if (!session) {
     redirect(CONNEXION);
   }
+
+  const requested = Array.isArray(params.section) ? params.section[0] : params.section;
 
   return (
     <>
       <SiteHeaderEpure />
 
       <main id="contenu" className="bg-panel pb-24 lg:pb-8">
-        <CitizenSpace session={session} />
+        <CitizenSpace
+          session={session}
+          initialSection={requested && SECTIONS.has(requested) ? requested : "tableau"}
+        />
       </main>
 
       <SiteFooter />

@@ -59,7 +59,10 @@ export function NeedCards({ specialties }: { specialties: Facet[] }) {
             return (
               <li key={need.slug}>
                 <Link
-                  href={`/besoin/nouveau?situation=${need.slug}`}
+                  // Le domaine plutôt que le slug de la carte : c'est ce que
+                  // le formulaire pré-sélectionne, et les deux nomenclatures
+                  // n'ont aucune raison de rester alignées.
+                  href={`/besoin/nouveau?domaine=${encodeURIComponent(need.specialty)}`}
                   className="group flex h-full flex-col rounded-2xl border border-marine-950/8 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-gold-500/40 hover:shadow-card"
                 >
                   <span className="grid size-12 place-items-center rounded-2xl bg-marine-50 text-marine-700 transition-colors duration-300 group-hover:bg-gold-500 group-hover:text-white">

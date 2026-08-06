@@ -7,7 +7,7 @@
 
 // `import type` est entièrement effacé à la compilation : ce fichier ne tire
 // donc pas `lib/api/public` — un module serveur — dans le bundle du navigateur.
-import type { GuideSummary } from "@/lib/api/public";
+import type { Facet, GuideSummary } from "@/lib/api/public";
 
 /** Messages d'erreur par nom de champ, tels que les renvoie le plugin. */
 export type FieldErrors = Record<string, string>;
@@ -166,6 +166,8 @@ export type MeResult = {
   profile: Record<string, unknown> | null;
   documents: ApiDocument[];
   subscription: Record<string, unknown> | null;
+  /** Absent des installations antérieures à la 1.4.0 du plugin. */
+  counters?: AccountCounters;
 };
 
 /**
@@ -280,6 +282,212 @@ export type ClientStats = {
   reviews: number;
 };
 
+/* -------------------------------------------------------------------------- */
+/* Espace communautaire                                                       */
+/* -------------------------------------------------------------------------- */
+
+/** Régime d'un besoin : ouvert à tous, ou adressé à un cabinet. */
+export type NeedScope = "public" | "prive";
+
+export type NeedStatus = "ouvert" | "resolu" | "ferme" | "modere";
+
+/**
+ * Un problème déposé depuis « Poser mon problème ».
+ *
+ * `excerpt` est toujours servi, `body` seulement sur la page de détail : une
+ * liste de douze récits complets pèserait pour rien.
+ */
+export type CommunityNeed = {
+  id: string;
+  slug: string;
+  scope: NeedScope;
+  title: string;
+  excerpt: string;
+  body?: string;
+  specialty: string;
+  city: string;
+  urgency: string;
+  budget: string;
+  status: NeedStatus;
+  /** Pseudonyme, ou « Membre » quand l'auteur a choisi l'anonymat. */
+  author: string;
+  anonymous: boolean;
+  views: number;
+  replies: number;
+  helpful: number;
+  date: string;
+  activeAt: string;
+  at: string;
+  /** Cabinet visé — présent uniquement sur un besoin privé. */
+  lawyer?: { slug: string; name: string };
+};
+
+/**
+ * Une réponse de l'espace communautaire.
+ *
+ * `lawyer` n'est renseigné que lorsque la réponse vient d'un compte praticien
+ * **vérifié** : c'est ce champ, et lui seul, qui déclenche le badge « Avocat ».
+ */
+export type NeedReply = {
+  id: string;
+  body: string;
+  author: string;
+  initials: string;
+  helpful: number;
+  date: string;
+  at: string;
+  lawyer: {
+    slug: string;
+    name: string;
+    bar: string;
+    city: string;
+    type: "individuel" | "cabinet";
+  } | null;
+};
+
+export type NeedsResult = {
+  items: CommunityNeed[];
+  total: number;
+  pages: number;
+  page: number;
+  facets: { specialties: Facet[]; cities: Facet[] } | null;
+};
+
+export type NeedDetail = {
+  need: CommunityNeed;
+  replies: NeedReply[];
+  /** Cibles déjà marquées « utile » par le lecteur — « need:12 », « reply:34 ». */
+  voted: string[];
+  isOwner: boolean;
+};
+
+/* -------------------------------------------------------------------------- */
+/* Messagerie                                                                 */
+/* -------------------------------------------------------------------------- */
+
+/** L'interlocuteur d'un fil — jamais soi-même. */
+export type ConversationPeer = {
+  type: "client" | "account";
+  name: string;
+  /** Slug de vitrine quand l'interlocuteur est un praticien, vide sinon. */
+  slug: string;
+  initials: string;
+  city: string;
+};
+
+export type Conversation = {
+  /** UUID public : l'auto-incrément n'apparaît jamais dans une URL. */
+  id: string;
+  subject: string;
+  status: string;
+  unread: number;
+  excerpt: string;
+  date: string;
+  at: string;
+  needId: string;
+  with: ConversationPeer;
+};
+
+export type ConversationMessage = {
+  id: string;
+  from: "client" | "account" | "system";
+  author: string;
+  /** Vrai quand le lecteur est l'auteur : évite de recomparer à chaque bulle. */
+  mine: boolean;
+  body: string;
+  date: string;
+  at: string;
+  read: boolean;
+};
+
+export type ConversationThread = {
+  conversation: Conversation;
+  messages: ConversationMessage[];
+};
+
+/* -------------------------------------------------------------------------- */
+/* Réservations et rendez-vous                                                */
+/* -------------------------------------------------------------------------- */
+
+export type BookingKind = "prestation" | "rendez_vous";
+
+export type BookingStatus = "demande" | "confirme" | "refuse" | "annule" | "honore";
+
+export type Booking = {
+  id: string;
+  kind: BookingKind;
+  title: string;
+  mode: string;
+  price: number;
+  currency: string;
+  status: BookingStatus;
+  statusLabel: string;
+  statusTone: string;
+  preferredOn: string;
+  preferredAt: string;
+  slot: string;
+  slotLabel: string;
+  message: string;
+  note: string;
+  date: string;
+  at: string;
+  /** Coordonnées du demandeur — servies au seul praticien destinataire. */
+  contact?: { name: string; email: string; phone: string; alias: string; city: string };
+  /** Cabinet visé — servi au seul citoyen demandeur. */
+  lawyer?: { slug: string; name: string };
+};
+
+/* -------------------------------------------------------------------------- */
+/* Notifications                                                              */
+/* -------------------------------------------------------------------------- */
+
+export type AppNotification = {
+  id: string;
+  /** « message.received », « need.reply », « booking.confirme »… */
+  type: string;
+  title: string;
+  body: string;
+  /** Chemin front de l'élément concerné, calculé à l'écriture. */
+  link: string;
+  entityType: string;
+  entityId: string;
+  read: boolean;
+  date: string;
+  at: string;
+};
+
+export type NotificationsResult = {
+  items: AppNotification[];
+  unread: number;
+};
+
+/* -------------------------------------------------------------------------- */
+/* Paiement d'un guide                                                        */
+/* -------------------------------------------------------------------------- */
+
+export type PaymentMethod = {
+  id: string;
+  label: string;
+  hint: string;
+  /** Faux tant que l'opérateur n'est pas branché : le choix reste visible, grisé. */
+  enabled: boolean;
+};
+
+/** Réponse de GET /client/guides/{slug}/checkout — le récapitulatif d'achat. */
+export type CheckoutOrder = {
+  guide: GuideSummary;
+  amount: number;
+  currency: string;
+  free: boolean;
+  owned: boolean;
+  /** Un paiement a déjà été engagé et attend confirmation. */
+  pending: boolean;
+  reference: string;
+  methods: PaymentMethod[];
+  /** Vrai tant qu'aucun prestataire n'encaisse réellement. */
+  simulated: boolean;
+};
+
 /** Réponse de GET /client/me — tout l'espace personnel en un appel. */
 export type ClientMeResult = {
   client: ApiClient;
@@ -287,6 +495,18 @@ export type ClientMeResult = {
   purchases: ClientPurchase[];
   reviews: ClientReview[];
   activity: ClientActivity[];
+  needs: CommunityNeed[];
+  bookings: Booking[];
+  conversations: Conversation[];
+  /** Notifications non lues — alimente la pastille de l'en-tête. */
+  notifications: number;
+};
+
+/** Compteurs servis avec /auth/me — pastilles de l'espace praticien. */
+export type AccountCounters = {
+  notifications: number;
+  messages: number;
+  bookings: number;
 };
 
 /** Réponse de POST /client/login et /client/register, jeton retiré par Next. */

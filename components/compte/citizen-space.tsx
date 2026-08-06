@@ -10,27 +10,36 @@ import { Rating } from "@/components/ui/rating";
 import { CitizenAccountSection } from "@/components/compte/section-compte";
 import { cn, formatFcfa, groupDigits } from "@/lib/utils";
 import type {
+  Booking,
   ClientActivity,
   ClientMeResult,
   ClientPurchase,
   ClientReview,
+  CommunityNeed,
 } from "@/lib/api/types";
 import {
   IconAlert,
   IconArrowRight,
+  IconCalendar,
   IconCheck,
   IconClock,
   IconDownload,
+  IconEye,
   IconFileText,
   IconGrid,
   IconLock,
+  IconMessage,
+  IconMessages,
   IconSearch,
+  IconSend,
   IconStar,
   IconUserCog,
 } from "@/components/ui/icons";
 
 const navigation = [
   { id: "tableau", label: "Tableau de bord", Icon: IconGrid },
+  { id: "demandes", label: "Mes demandes", Icon: IconSend },
+  { id: "rendez-vous", label: "Mes rendez-vous", Icon: IconCalendar },
   { id: "guides", label: "Mes guides", Icon: IconFileText },
   { id: "avis", label: "Mes avis", Icon: IconStar },
   { id: "activite", label: "Mon activité", Icon: IconClock },
@@ -48,14 +57,28 @@ const navigation = [
  * L'état est tenu ici et non dans chaque section : modifier son pseudonyme doit
  * se voir immédiatement dans le rail, sans recharger la page.
  */
-export function CitizenSpace({ session }: { session: ClientMeResult }) {
-  const [section, setSection] = useState<string>("tableau");
+export function CitizenSpace({
+  session,
+  initialSection = "tableau",
+}: {
+  session: ClientMeResult;
+  /**
+   * Section ouverte au chargement.
+   *
+   * Les notifications pointent vers `?section=rendez-vous` : atterrir sur le
+   * tableau de bord obligerait à retrouver soi-même ce dont on vient d'être
+   * prévenu.
+   */
+  initialSection?: string;
+}) {
+  const [section, setSection] = useState<string>(initialSection);
   const [client, setClient] = useState(session.client);
 
-  const { stats, purchases, reviews, activity } = session;
+  const { stats, purchases, reviews, activity, needs, bookings, conversations } = session;
 
   const initials = buildInitials(client);
   const pending = purchases.filter((purchase) => purchase.status === "en_attente");
+  const unreadMessages = conversations.reduce((total, item) => total + item.unread, 0);
 
   return (
     <div className="container-page grid gap-8 py-8 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] lg:gap-10 lg:py-10">
@@ -99,12 +122,30 @@ export function CitizenSpace({ session }: { session: ClientMeResult }) {
         </nav>
 
         <Link
-          href="/guides"
+          href="/messages?profil=citoyen"
           className={buttonStyles({
             variant: "outline",
             size: "sm",
             full: true,
             className: "mt-5 border-marine-950/15 bg-white",
+          })}
+        >
+          <IconMessages className="size-4" />
+          Mes messages
+          {unreadMessages > 0 && (
+            <span className="rounded-full bg-gold-500 px-1.5 text-[0.7rem] font-bold text-marine-950">
+              {unreadMessages}
+            </span>
+          )}
+        </Link>
+
+        <Link
+          href="/guides"
+          className={buttonStyles({
+            variant: "outline",
+            size: "sm",
+            full: true,
+            className: "mt-2 border-marine-950/15 bg-white",
           })}
         >
           <IconSearch className="size-4" />
@@ -141,6 +182,10 @@ export function CitizenSpace({ session }: { session: ClientMeResult }) {
             onNavigate={setSection}
           />
         )}
+
+        {section === "demandes" && <Needs needs={needs} />}
+
+        {section === "rendez-vous" && <Bookings bookings={bookings} />}
 
         {section === "guides" && <Library purchases={purchases} />}
 
@@ -237,6 +282,244 @@ function Dashboard({
         <ActivityList entries={activity.slice(0, 5)} />
       </AdminCard>
     </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Demandes déposées                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Les problèmes déposés, publics et privés dans la même liste.
+ *
+ * Ils sont distingués par une pastille, pas séparés en deux blocs : de son
+ * point de vue, la personne a posé trois questions — que deux d'entre elles
+ * soient parties à la communauté et la troisième à un cabinet ne change rien à
+ * ce qu'elle est venue vérifier, c'est-à-dire si on lui a répondu.
+ */
+function Needs({ needs }: { needs: CommunityNeed[] }) {
+  if (needs.length === 0) {
+    return (
+      <AdminCard title="Mes demandes" description="Les problèmes que vous avez déposés.">
+        <div className="rounded-2xl border border-dashed border-marine-300 px-6 py-12 text-center">
+          <span
+            className="mx-auto grid size-12 place-items-center rounded-2xl bg-marine-50 text-marine-400"
+            aria-hidden="true"
+          >
+            <IconSend className="size-5" />
+          </span>
+
+          <p className="mt-4 font-serif text-lg font-bold text-marine-950">
+            Vous n’avez encore rien déposé
+          </p>
+          <p className="mx-auto mt-2 max-w-sm text-sm/relaxed text-marine-600">
+            Décrivez votre situation : à la communauté, pour recueillir des
+            retours, ou en privé à un cabinet de votre choix.
+          </p>
+
+          <Link href="/besoin/nouveau" className={buttonStyles({ size: "sm", className: "mt-6" })}>
+            Poser mon problème
+            <IconArrowRight className="size-4" />
+          </Link>
+        </div>
+      </AdminCard>
+    );
+  }
+
+  return (
+    <AdminCard
+      title="Mes demandes"
+      description={`${groupDigits(needs.length)} ${needs.length > 1 ? "problèmes déposés" : "problème déposé"}.`}
+      action={
+        <Link href="/besoin/nouveau" className={buttonStyles({ size: "sm" })}>
+          <IconSend className="size-4" />
+          Nouveau
+        </Link>
+      }
+    >
+      <ul className="space-y-3">
+        {needs.map((need) => {
+          const isPrivate = need.scope === "prive";
+
+          return (
+            <li key={need.id} className="rounded-2xl border border-marine-950/8 p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <p className="min-w-0 font-semibold text-marine-950">
+                  {isPrivate ? (
+                    need.title
+                  ) : (
+                    <Link href={`/communaute/${need.slug}`} className="hover:text-gold-700">
+                      {need.title}
+                    </Link>
+                  )}
+                </p>
+
+                <span
+                  className={cn(
+                    "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.7rem] font-semibold tracking-wide uppercase ring-1 ring-inset",
+                    isPrivate
+                      ? "bg-marine-950/5 text-marine-600 ring-marine-950/10"
+                      : "bg-gold-500/12 text-gold-700 ring-gold-500/25",
+                  )}
+                >
+                  {isPrivate ? <IconLock className="size-3" /> : <IconEye className="size-3" />}
+                  {isPrivate ? "Privé" : "Communauté"}
+                </span>
+              </div>
+
+              <p className="mt-1.5 line-clamp-2 text-sm/relaxed text-marine-600">
+                {need.excerpt}
+              </p>
+
+              <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-marine-500">
+                <span>{need.date}</span>
+
+                {isPrivate ? (
+                  need.lawyer && (
+                    <span>
+                      Adressé à{" "}
+                      <Link
+                        href={`/avocats/${need.lawyer.slug}`}
+                        className="font-semibold text-marine-700 hover:text-gold-700"
+                      >
+                        {need.lawyer.name}
+                      </Link>
+                    </span>
+                  )
+                ) : (
+                  <>
+                    <span className="inline-flex items-center gap-1">
+                      <IconMessage className="size-3.5" />
+                      {need.replies} {need.replies > 1 ? "réponses" : "réponse"}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <IconEye className="size-3.5" />
+                      {need.views} {need.views > 1 ? "vues" : "vue"}
+                    </span>
+                  </>
+                )}
+              </p>
+
+              {isPrivate && (
+                <Link
+                  href="/messages?profil=citoyen"
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-gold-700 hover:text-gold-800"
+                >
+                  <IconMessages className="size-4" />
+                  Ouvrir la conversation
+                </Link>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </AdminCard>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Rendez-vous et réservations                                                */
+/* -------------------------------------------------------------------------- */
+
+const bookingTones: Record<string, string> = {
+  warning: "bg-gold-500/12 text-gold-700 ring-gold-500/25",
+  success: "bg-trust-500/10 text-trust-600 ring-trust-500/25",
+  danger: "bg-danger-50 text-danger-700 ring-danger-200",
+  neutral: "bg-marine-950/5 text-marine-600 ring-marine-950/10",
+};
+
+function Bookings({ bookings }: { bookings: Booking[] }) {
+  if (bookings.length === 0) {
+    return (
+      <AdminCard
+        title="Mes rendez-vous"
+        description="Vos réservations de prestations et vos demandes de créneau."
+      >
+        <div className="rounded-2xl border border-dashed border-marine-300 px-6 py-12 text-center">
+          <span
+            className="mx-auto grid size-12 place-items-center rounded-2xl bg-marine-50 text-marine-400"
+            aria-hidden="true"
+          >
+            <IconCalendar className="size-5" />
+          </span>
+
+          <p className="mt-4 font-serif text-lg font-bold text-marine-950">
+            Aucun rendez-vous engagé
+          </p>
+          <p className="mx-auto mt-2 max-w-sm text-sm/relaxed text-marine-600">
+            Depuis la fiche d’un avocat, réservez une prestation tarifée ou
+            demandez simplement un créneau.
+          </p>
+
+          <Link href="/avocats" className={buttonStyles({ size: "sm", className: "mt-6" })}>
+            Parcourir l’annuaire
+            <IconArrowRight className="size-4" />
+          </Link>
+        </div>
+      </AdminCard>
+    );
+  }
+
+  return (
+    <AdminCard
+      title="Mes rendez-vous"
+      description={`${groupDigits(bookings.length)} ${bookings.length > 1 ? "demandes engagées" : "demande engagée"}. Le cabinet répond sous 48 heures ouvrées.`}
+    >
+      <ul className="space-y-3">
+        {bookings.map((booking) => (
+          <li key={booking.id} className="rounded-2xl border border-marine-950/8 p-4 sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold text-marine-950">
+                  {booking.title || "Demande de rendez-vous"}
+                </p>
+                {booking.lawyer?.slug && (
+                  <p className="mt-0.5 text-sm text-marine-600">
+                    <Link
+                      href={`/avocats/${booking.lawyer.slug}`}
+                      className="hover:text-gold-700"
+                    >
+                      {booking.lawyer.name}
+                    </Link>
+                  </p>
+                )}
+              </div>
+
+              <span
+                className={cn(
+                  "shrink-0 rounded-full px-2.5 py-1 text-[0.7rem] font-bold tracking-wide uppercase ring-1 ring-inset",
+                  bookingTones[booking.statusTone] ?? bookingTones.neutral,
+                )}
+              >
+                {booking.statusLabel}
+              </span>
+            </div>
+
+            <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-marine-500">
+              <span className="inline-flex items-center gap-1">
+                <IconCalendar className="size-3.5" />
+                {booking.slotLabel}
+              </span>
+              {booking.price > 0 && (
+                <span className="font-semibold text-marine-700">
+                  {formatFcfa(booking.price)}
+                </span>
+              )}
+              <span>Demandé {booking.date}</span>
+            </p>
+
+            {booking.note && (
+              <p className="mt-3 rounded-xl bg-marine-50 p-3.5 text-sm/relaxed text-marine-700">
+                <span className="block text-xs font-bold tracking-wide text-marine-500 uppercase">
+                  Réponse du cabinet
+                </span>
+                <span className="mt-1 block">{booking.note}</span>
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </AdminCard>
   );
 }
 

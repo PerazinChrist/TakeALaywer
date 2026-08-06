@@ -7,7 +7,7 @@
 import { cache } from "react";
 import { callWordPress } from "@/lib/api/server";
 import { readSessionToken } from "@/lib/api/session";
-import type { MeResult, ReviewsResult } from "@/lib/api/types";
+import type { Booking, MeResult, ReviewsResult } from "@/lib/api/types";
 
 /**
  * Retourne le compte associé au cookie de session.
@@ -59,4 +59,21 @@ export const fetchMyReviews = cache(async (): Promise<ReviewsResult> => {
   return result.ok && result.data
     ? { ...NO_REVIEWS, ...result.data, counts: { ...NO_REVIEWS.counts, ...result.data.counts } }
     : NO_REVIEWS;
+});
+
+/**
+ * Retourne l'agenda du praticien connecté — réservations et rendez-vous.
+ *
+ * Servi à part de `/auth/me`, comme les avis : cette liste porte les
+ * coordonnées des demandeurs, et elle n'a rien à faire dans la charge utile
+ * lue par l'en-tête sur chaque page du site.
+ */
+export const fetchMyBookings = cache(async (): Promise<Booking[]> => {
+  const token = await readSessionToken();
+
+  if (!token) return [];
+
+  const result = await callWordPress<{ items: Booking[] }>("/me/bookings", { token });
+
+  return result.ok && Array.isArray(result.data?.items) ? result.data.items : [];
 });

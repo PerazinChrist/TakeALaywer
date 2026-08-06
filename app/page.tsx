@@ -16,6 +16,7 @@ import { SocialProofToaster } from "@/components/social-proof-toaster";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { fetchCurrentAccount } from "@/lib/api/account";
 import { fetchCurrentClient } from "@/lib/api/citizen";
+import { fetchBadges } from "@/lib/api/desk";
 import { fetchHome } from "@/lib/api/public";
 import { buildSocialProof } from "@/lib/data/social-proof";
 
@@ -64,15 +65,27 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   // L'en-tête est un composant client : il ne peut pas lire les cookies de
   // session lui-même, on les lui transmet depuis le rendu serveur.
-  const [isSignedIn, clientSignedIn, home] = await Promise.all([
+  const [isSignedIn, clientSignedIn, home, badges] = await Promise.all([
     fetchCurrentAccount().then(Boolean),
     fetchCurrentClient().then(Boolean),
     fetchHome(),
+    fetchBadges(),
   ]);
+
+  // Les deux versants sont additionnés : la cloche annonce ce qu'il y a à
+  // lire, la page de notifications se charge ensuite de les séparer.
+  const notifications =
+    (badges.client?.notifications ?? 0) + (badges.account?.notifications ?? 0);
+  const messages = (badges.client?.messages ?? 0) + (badges.account?.messages ?? 0);
 
   return (
     <>
-      <SiteHeader isSignedIn={isSignedIn} clientSignedIn={clientSignedIn} />
+      <SiteHeader
+        isSignedIn={isSignedIn}
+        clientSignedIn={clientSignedIn}
+        notifications={notifications}
+        messages={messages}
+      />
 
       {/* La marge basse laisse la place a la barre d'action mobile. */}
       <main id="contenu" className="pb-24 lg:pb-0">

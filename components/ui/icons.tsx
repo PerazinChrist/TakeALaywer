@@ -255,6 +255,30 @@ export const IconMessage = (p: IconProps) => (
   </Outline>
 );
 
+/** Centre de notifications — cloche de l'en-tete. */
+export const IconBell = (p: IconProps) => (
+  <Outline {...p}>
+    <path d="M10.268 21a2 2 0 0 0 3.464 0" />
+    <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326" />
+  </Outline>
+);
+
+/** « Ca m'a ete utile » — vote de l'espace communautaire. */
+export const IconThumbsUp = (p: IconProps) => (
+  <Outline {...p}>
+    <path d="M7 10v11" />
+    <path d="M14.5 3 12 9h5.6a2 2 0 0 1 1.96 2.4l-1.4 7A2 2 0 0 1 16.2 20H7V10l3.2-7h1.3a3 3 0 0 1 3 3z" />
+  </Outline>
+);
+
+/** Fil de discussion — messagerie citoyen / praticien. */
+export const IconMessages = (p: IconProps) => (
+  <Outline {...p}>
+    <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z" />
+    <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+  </Outline>
+);
+
 export const IconPhone = (p: IconProps) => (
   <Outline {...p}>
     <path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" />

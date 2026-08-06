@@ -94,11 +94,20 @@ export function GuidePaywall({
         </div>
 
         {signedIn ? (
-          <UnlockButton slug={guide.slug} price={guide.price} free={guide.free} />
+          guide.free ? (
+            // Rien à régler : l'ajout est immédiat, une page de paiement
+            // intercalée ne ferait que retarder une lecture déjà due.
+            <UnlockButton slug={guide.slug} price={guide.price} free={guide.free} />
+          ) : (
+            <Link href={`/guides/${guide.slug}/acheter`} className={buttonStyles({ size: "lg" })}>
+              <IconSmartphone className="size-4.5" />
+              Débloquer · {formatFcfa(guide.price)}
+            </Link>
+          )
         ) : (
           <div className="flex flex-col items-stretch gap-2 sm:items-end">
             <Link
-              href={`/compte/inscription?suite=${encodeURIComponent(suite)}`}
+              href={`/compte/inscription?suite=${encodeURIComponent(`/guides/${guide.slug}/acheter`)}`}
               className={buttonStyles({ size: "lg" })}
             >
               <IconSmartphone className="size-4.5" />

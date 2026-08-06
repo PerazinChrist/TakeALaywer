@@ -12,7 +12,7 @@
 import { cache } from "react";
 import { callWordPress } from "@/lib/api/server";
 import { readClientToken } from "@/lib/api/session";
-import type { ClientMeResult, ClientStats } from "@/lib/api/types";
+import type { CheckoutOrder, ClientMeResult, ClientStats } from "@/lib/api/types";
 
 /**
  * Retourne l'espace personnel associé au cookie citoyen.
@@ -49,8 +49,44 @@ export const fetchCurrentClient = cache(async (): Promise<ClientMeResult | null>
     purchases: Array.isArray(result.data.purchases) ? result.data.purchases : [],
     reviews: Array.isArray(result.data.reviews) ? result.data.reviews : [],
     activity: Array.isArray(result.data.activity) ? result.data.activity : [],
+    // Les quatre champs ci-dessous sont apparus avec la 1.4.0 du plugin : une
+    // installation plus ancienne ne les renvoie pas, et l'espace personnel ne
+    // doit pas tomber sur un `.map` appliqué à undefined.
+    needs: Array.isArray(result.data.needs) ? result.data.needs : [],
+    bookings: Array.isArray(result.data.bookings) ? result.data.bookings : [],
+    conversations: Array.isArray(result.data.conversations) ? result.data.conversations : [],
+    notifications: result.data.notifications ?? 0,
   };
 });
+
+/**
+ * Récapitulatif d'achat d'un guide — GET /client/guides/{slug}/checkout.
+ *
+ * Cette lecture ne débite rien et n'ouvre rien : elle décrit la commande — quel
+ * guide, quel montant, quels moyens de paiement — pour que la page de paiement
+ * ait quelque chose de vrai à afficher. Le débit reste le fait du déblocage,
+ * confirmé après le choix du moyen de paiement.
+ *
+ * @returns L'ordre, ou null si le visiteur n'est pas connecté ou si le guide
+ *          n'est plus publié.
+ */
+export async function fetchCheckout(slug: string): Promise<CheckoutOrder | null> {
+  const token = await readClientToken();
+
+  if (!token) return null;
+
+  const result = await callWordPress<CheckoutOrder>(
+    `/client/guides/${encodeURIComponent(slug)}/checkout`,
+    { token },
+  );
+
+  if (!result.ok || !result.data?.guide) return null;
+
+  return {
+    ...result.data,
+    methods: Array.isArray(result.data.methods) ? result.data.methods : [],
+  };
+}
 
 /**
  * Indique si le visiteur possède un guide donné.

@@ -10,6 +10,8 @@ import {
   PanelGalerie,
   PanelGuides,
 } from "@/components/avocats/vitrine/vitrine-panels";
+import type { BookingSession } from "@/components/avocats/vitrine/reserve-button";
+import type { ReviewIdentity } from "@/components/avocats/vitrine/review-form";
 import { IconMore } from "@/components/ui/icons";
 
 /**
@@ -23,9 +25,18 @@ import { IconMore } from "@/components/ui/icons";
 export function VitrineBody({
   profile,
   sidebar,
+  session,
+  identity,
 }: {
   profile: LawyerProfile;
   sidebar: ReactNode;
+  /**
+   * Ce que le serveur sait du visiteur : de quoi pré-remplir une réservation
+   * sans l'obliger à retaper ce qu'il a déjà donné à l'inscription.
+   */
+  session: BookingSession;
+  /** Identité du citoyen connecté — conditionne le dépôt d'un avis. */
+  identity: ReviewIdentity | null;
 }) {
   const [tab, setTab] = useState("tout");
 
@@ -102,12 +113,12 @@ export function VitrineBody({
 
           <div>
             {tab === "tout" && (
-              <PanelApercu profile={profile} onNavigate={setTab} />
+              <PanelApercu profile={profile} session={session} onNavigate={setTab} />
             )}
             {tab === "apropos" && <PanelAPropos profile={profile} />}
             {tab === "guides" && <PanelGuides profile={profile} />}
             {tab === "galerie" && <PanelGalerie profile={profile} />}
-            {tab === "avis" && <PanelAvis profile={profile} />}
+            {tab === "avis" && <PanelAvis profile={profile} identity={identity} />}
           </div>
         </div>
       </div>

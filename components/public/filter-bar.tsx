@@ -60,7 +60,9 @@ export function FilterBar({
   activeFilters?: { label: string; href: string }[];
 }) {
   return (
-    <div className="rounded-3xl bg-white p-5 shadow-card ring-1 ring-marine-950/6 sm:p-6">
+    // `relative` : la carte chevauche le bandeau de titre des pages d'index, et
+    // un bloc statique passerait sous un en-tête lui-même positionné.
+    <div className="relative rounded-3xl bg-white p-5 shadow-card ring-1 ring-marine-950/6 sm:p-6">
       <form action={action} method="get" className="flex flex-col gap-3">
         {Object.entries(hiddenFields).map(([name, value]) => (
           <input key={name} type="hidden" name={name} value={value} />

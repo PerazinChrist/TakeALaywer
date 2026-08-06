@@ -13,7 +13,8 @@ const columns = [
   {
     title: "Citoyens",
     links: [
-      { label: "Poser mon besoin", href: "/besoin/nouveau" },
+      { label: "Poser mon problème", href: "/besoin/nouveau" },
+      { label: "Espace communautaire", href: "/communaute" },
       { label: "Trouver un avocat", href: "/avocats" },
       { label: "Guides & articles", href: "/guides" },
       { label: "Comment ça marche", href: "/comment-ca-marche" },
@@ -25,9 +26,13 @@ const columns = [
     links: [
       { label: "Rejoindre le réseau", href: "/avocats/inscription" },
       { label: "Espace praticien", href: "/avocats/espace-praticien" },
-      { label: "Offre Pionnière", href: "/tarifs" },
-      { label: "Publier un guide", href: "/avocats/publier" },
-      { label: "Crédits de réponse", href: "/tarifs#credits" },
+      { label: "Formules & tarifs", href: "/tarifs" },
+      // Publier un guide et suivre ses rendez-vous se font dans l'espace
+      // praticien, sections « Guides publiés » et « Rendez-vous » : ces liens
+      // les ouvrent directement plutôt que de promettre des pages qui
+      // n'existent pas.
+      { label: "Publier un guide", href: "/avocats/espace-praticien?section=guides" },
+      { label: "Mes rendez-vous", href: "/avocats/espace-praticien?section=rendez-vous" },
     ],
   },
   {

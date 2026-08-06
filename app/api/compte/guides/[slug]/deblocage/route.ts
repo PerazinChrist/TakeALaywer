@@ -12,7 +12,7 @@ import { NextResponse } from "next/server";
 import { relayClientJson } from "@/lib/api/citizen-relay";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
@@ -21,5 +21,8 @@ export async function POST(
     return NextResponse.json({ message: "Guide inconnu.", errors: {} }, { status: 404 });
   }
 
-  return relayClientJson(`/client/guides/${slug}/unlock`, "POST");
+  // Le corps porte le moyen de paiement choisi sur la page de paiement. Il est
+  // facultatif : le bouton de déblocage direct de la page de lecture n'en
+  // envoie pas, et le plugin retombe alors sur son propre choix.
+  return relayClientJson(`/client/guides/${slug}/unlock`, "POST", request);
 }

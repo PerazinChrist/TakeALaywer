@@ -26,10 +26,13 @@ import {
   type ApiDocument,
   type ReviewsResult,
 } from "@/lib/api/types";
+import { SectionRendezVous } from "@/components/avocats/admin/section-rendez-vous";
+import type { Booking } from "@/lib/api/types";
 import {
   IconAlert,
   IconArrowRight,
   IconBadgeCheck,
+  IconCalendar,
   IconCheck,
   IconCrown,
   IconDownload,
@@ -37,6 +40,7 @@ import {
   IconFileText,
   IconGrid,
   IconImage,
+  IconMessages,
   IconScale,
   IconSend,
   IconShieldCheck,
@@ -53,6 +57,7 @@ const navigation = [
   { id: "galerie", label: "Photos & albums", Icon: IconImage },
   { id: "guides", label: "Guides publiés", Icon: IconFileText },
   { id: "prestations", label: "Prestations", Icon: IconScale },
+  { id: "rendez-vous", label: "Rendez-vous", Icon: IconCalendar },
   { id: "avis", label: "Avis clients", Icon: IconStar },
   { id: "abonnement", label: "Abonnement", Icon: IconCrown },
 ] as const;
@@ -125,6 +130,9 @@ export function PractitionerSpace({
   account: initialAccount,
   documents = [],
   reviews = { items: [], counts: {}, average: 0 },
+  bookings = [],
+  unreadMessages = 0,
+  initialSection = "tableau",
 }: {
   profile: LawyerProfile;
   /** Absent en démonstration statique ; présent dès qu'une session est ouverte. */
@@ -132,14 +140,28 @@ export function PractitionerSpace({
   documents?: ApiDocument[];
   /** Avis reçus, modération comprise. Chargés côté serveur avec la page. */
   reviews?: ReviewsResult;
+  /** Réservations et demandes de rendez-vous, chargées côté serveur. */
+  bookings?: Booking[];
+  /** Messages non lus — pastille du rail. */
+  unreadMessages?: number;
+  /**
+   * Section ouverte au chargement.
+   *
+   * Les notifications pointent vers `?section=rendez-vous` : sans cela, le
+   * praticien atterrirait sur son tableau de bord et devrait retrouver
+   * lui-même ce dont on venait de le prévenir.
+   */
+  initialSection?: string;
 }) {
-  const [section, setSection] = useState<string>("tableau");
+  const [section, setSection] = useState<string>(initialSection);
   const [profile, setProfile] = useState(initialProfile);
   const [account, setAccount] = useState(initialAccount);
 
   const missing = documents.filter(
     (item) => item.required && item.status === "manquant",
   ).length;
+
+  const pendingBookings = bookings.filter((item) => item.status === "demande").length;
 
   // Sans session, les onglets qui écrivent n'auraient ni compte à modifier ni
   // endpoint à appeler : ils n'apparaissent que lorsque le compte est connu.
@@ -174,6 +196,10 @@ export function PractitionerSpace({
         >
           {sections.map(({ id, label, Icon }) => {
             const active = id === section;
+            // Seule la file des rendez-vous porte un compteur : c'est la seule
+            // section où quelqu'un attend une réponse de la part du praticien.
+            const badge = id === "rendez-vous" ? pendingBookings : 0;
+
             return (
               <button
                 key={id}
@@ -191,10 +217,34 @@ export function PractitionerSpace({
                   className={cn("size-4.5", active ? "text-gold-400" : "text-marine-400")}
                 />
                 {label}
+
+                {badge > 0 && (
+                  <span className="ml-auto rounded-full bg-gold-500 px-1.5 text-[0.7rem] font-bold text-marine-950">
+                    {badge}
+                  </span>
+                )}
               </button>
             );
           })}
         </nav>
+
+        <Link
+          href="/messages?profil=avocat"
+          className={buttonStyles({
+            variant: "outline",
+            size: "sm",
+            full: true,
+            className: "mt-5 border-marine-950/15 bg-white",
+          })}
+        >
+          <IconMessages className="size-4" />
+          Mes messages
+          {unreadMessages > 0 && (
+            <span className="rounded-full bg-gold-500 px-1.5 text-[0.7rem] font-bold text-marine-950">
+              {unreadMessages}
+            </span>
+          )}
+        </Link>
 
         <Link
           href={`/avocats/${profile.slug}`}
@@ -202,7 +252,7 @@ export function PractitionerSpace({
             variant: "outline",
             size: "sm",
             full: true,
-            className: "mt-5 border-marine-950/15 bg-white",
+            className: "mt-2 border-marine-950/15 bg-white",
           })}
         >
           <IconEye className="size-4" />
@@ -275,6 +325,8 @@ export function PractitionerSpace({
             onChange={(prestations) => patch({ prestations })}
           />
         )}
+
+        {section === "rendez-vous" && <SectionRendezVous initial={bookings} />}
 
         {section === "avis" && <SectionAvis initial={reviews} />}
         {section === "abonnement" && <SectionAbonnement profile={profile} />}
