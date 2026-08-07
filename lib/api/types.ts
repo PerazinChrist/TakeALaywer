@@ -43,6 +43,14 @@ export type ApiAccount = {
   status: AccountStatus;
   email: string;
   phone: string;
+  /**
+   * Numéro Mobile Money sur lequel sont reversées les ventes de guides.
+   *
+   * Distinct de `phone`, qui sert à joindre le cabinet : celui-ci reçoit de
+   * l'argent. Les confondre ferait partir des virements vers un standard.
+   * Obligatoire pour publier un guide — le backend refuse la publication sans.
+   */
+  momoPhone: string;
   name: string;
   bar: string;
   city: string;
@@ -85,6 +93,7 @@ export type AccountDraft = Partial<
     ApiAccount,
     | "email"
     | "phone"
+    | "momoPhone"
     | "bar"
     | "city"
     | "district"
@@ -521,6 +530,57 @@ export type UnlockResult = {
   /** Faux quand le paiement reste à confirmer : le guide n'est pas ouvert. */
   unlocked: boolean;
   message: string;
+};
+
+/* -------------------------------------------------------------------------- */
+/* Encaissement Mobile Money (CamPay)                                         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Réponse de POST /api/paiements/campay/collecte.
+ *
+ * La demande est partie sur le téléphone du citoyen ; rien n'est encore
+ * encaissé. Ces champs servent à l'écran d'attente : dire quel opérateur a été
+ * sollicité, et quel code composer si la notification ne s'affiche pas.
+ */
+export type CollectStart = {
+  /** UUID CamPay, à repasser à la vérification de statut. */
+  reference: string;
+  /** Code de repli (« *126# pour MTN, #150*50# pour Orange »). */
+  ussdCode: string;
+  operator: string;
+  amount: number;
+  currency: string;
+  /** Numéro normalisé (237XXXXXXXXX), réaffiché pour lever un doute de saisie. */
+  phone: string;
+};
+
+/**
+ * Ordre de virement rendu par le plugin après confirmation d'une vente.
+ *
+ * La plateforme reverse une part à l'auteur du guide sur chaque exemplaire
+ * vendu. Le montant est arrêté côté WordPress — jamais calculé ici : c'est une
+ * règle de la plateforme, pas un paramètre que le front pourrait négocier.
+ */
+export type PayoutOrder = {
+  id: string;
+  /** Numéro Mobile Money du bénéficiaire, vide s'il n'en a pas renseigné. */
+  phone: string;
+  amount: number;
+  currency: string;
+  /** « en_attente » tant que le virement n'est pas parti. */
+  status: string;
+  reason: string;
+};
+
+/** Réponse de POST /api/paiements/campay/statut. */
+export type PaymentStatusResult = {
+  status: "PENDING" | "SUCCESSFUL" | "FAILED";
+  /** Vrai uniquement quand le guide est effectivement entré en bibliothèque. */
+  unlocked: boolean;
+  message: string;
+  /** Référence lisible de l'encaissement, à citer en cas de réclamation. */
+  reference?: string;
 };
 
 /** Libellés d'affichage des statuts de compte. */

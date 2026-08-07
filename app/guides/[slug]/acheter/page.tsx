@@ -9,6 +9,7 @@ import { buttonStyles } from "@/components/ui/button";
 import { CheckoutPanel } from "@/components/compte/checkout-panel";
 import { fetchCheckout, fetchCurrentClient } from "@/lib/api/citizen";
 import { fetchGuide } from "@/lib/api/public";
+import { campayConfigured } from "@/lib/paiement/campay";
 import { formatFcfa } from "@/lib/utils";
 import {
   IconChevronLeft,
@@ -83,7 +84,10 @@ export default async function AcheterGuidePage({ params }: Params) {
 
               <div className="mt-7 border-t border-marine-950/8 pt-7">
                 {order ? (
-                  <CheckoutPanel order={order} />
+                  // Seul un booléen traverse la frontière serveur/client : les
+                  // clés CamPay restent dans le processus Next, le navigateur
+                  // apprend juste s'il doit demander un numéro de téléphone.
+                  <CheckoutPanel order={order} campayReady={campayConfigured()} />
                 ) : (
                   <SignedOutNotice slug={guide.slug} price={guide.price} free={guide.free} />
                 )}

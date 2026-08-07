@@ -16,6 +16,14 @@ import type { AccountDraft, ApiAccount } from "@/lib/api/types";
 import { IconAlert, IconBriefcase, IconMail, IconUser } from "@/components/ui/icons";
 
 /**
+ * Part reversée à l'auteur sur chaque vente de guide.
+ *
+ * Écrite ici pour l'affichage seul : le calcul fait autorité côté plugin
+ * (TAL_Payouts::SHARE), et rien de ce que le navigateur croit ne l'influence.
+ */
+const SHARE_LABEL = "70 %";
+
+/**
  * Modification du compte — le pendant privé de l'inscription.
  *
  * Les champs diffèrent selon le type de compte : un cabinet a une dénomination,
@@ -419,7 +427,45 @@ export function SectionCompte({
               onChange={(event) => set("phone", event.target.value)}
             />
           </Field>
+
+          {/*
+            Numéro de reversement — distinct du téléphone de contact juste
+            au-dessus, et la nuance mérite d'être dite : celui-ci reçoit de
+            l'argent. Sans lui, le backend refuse la publication d'un guide,
+            d'où l'avertissement plutôt qu'un simple champ facultatif.
+          */}
+          <Field
+            label="Numéro Mobile Money"
+            htmlFor="momoPhone"
+            hint="MTN ou Orange. C’est sur ce numéro que vos ventes vous sont reversées — exigé pour publier un guide payant."
+            error={errors.momoPhone}
+          >
+            <TextInput
+              id="momoPhone"
+              type="tel"
+              inputMode="tel"
+              placeholder="6 99 00 00 00"
+              value={draft.momoPhone ?? ""}
+              invalid={Boolean(errors.momoPhone)}
+              onChange={(event) => set("momoPhone", event.target.value)}
+            />
+          </Field>
         </div>
+
+        {!account.momoPhone && (
+          <p
+            role="status"
+            className="mt-4 flex items-start gap-2.5 rounded-xl bg-gold-50 p-4 text-sm/relaxed text-marine-800 ring-1 ring-gold-500/25 ring-inset"
+          >
+            <IconAlert className="mt-0.5 size-4.5 shrink-0 text-gold-700" />
+            <span>
+              <span className="font-semibold">Numéro Mobile Money manquant.</span>{" "}
+              Renseignez-le pour pouvoir publier un guide payant : c’est le compte
+              sur lequel {SHARE_LABEL} du montant net de chaque vente vous sera
+              versé. Vos guides gratuits ne sont pas concernés.
+            </span>
+          </p>
+        )}
 
         <dl className="mt-6 grid gap-4 border-t border-marine-950/6 pt-5 sm:grid-cols-3">
           {[
@@ -465,6 +511,7 @@ function toDraft(account: ApiAccount): AccountDraft {
   const common: AccountDraft = {
     email: account.email ?? "",
     phone: account.phone ?? "",
+    momoPhone: account.momoPhone ?? "",
     bar: account.bar ?? "",
     city: account.city ?? "",
     district: account.district ?? "",

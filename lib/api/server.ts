@@ -96,7 +96,15 @@ export async function callWordPress<T = unknown>(
   const headers: Record<string, string> = {};
 
   if (withKey) headers["X-TAL-Key"] = apiKey();
-  if (token) headers.Authorization = `Bearer ${token}`;
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+    // Doublon volontaire. Beaucoup d'hébergements Apache en CGI/FastCGI ne
+    // transmettent pas `Authorization` à PHP : WordPress ne voit alors aucun
+    // jeton, et toutes les routes d'espace personnel répondent 401 sans que
+    // rien n'indique pourquoi. Le plugin accepte cet en-tête de repli.
+    headers["X-TAL-Token"] = token;
+  }
   // Le plugin n'accorde crédit à cet en-tête que si la clé est valide : le
   // transmettre sans elle serait sans effet.
   if (clientIp && withKey) headers["X-TAL-Client-IP"] = clientIp;
@@ -116,11 +124,20 @@ export async function callWordPress<T = unknown>(
       cache: "no-store",
     });
   } catch {
+    // Le message part à l'écran d'un visiteur : il ne peut pas parler de XAMPP,
+    // qui ne veut rien dire pour lui et ne le concerne pas. Le détail utile au
+    // développement va dans les journaux du serveur, où il a sa place.
+    if (process.env.NODE_ENV !== "production") {
+      console.error(
+        `[TakeALawyer] ${baseUrl()} est injoignable. En local, vérifiez qu’Apache et MySQL ` +
+          "tournent ; en ligne, vérifiez TAL_API_URL et que /wp-json/ répond.",
+      );
+    }
+
     return {
       ok: false,
       status: 503,
-      message:
-        "Le serveur d’inscription est injoignable. Vérifiez qu’Apache et MySQL tournent dans XAMPP.",
+      message: "Le service est momentanément injoignable. Réessayez dans un instant.",
       errors: {},
       data: null,
     };

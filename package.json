@@ -6,12 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "video:studio": "remotion studio",
+    "video:render": "remotion render PubTakeALawyer out/pub-takealawyer.mp4",
+    "video:still": "remotion still PubTakeALawyer out/affiche.png --frame=560"
   },
   "dependencies": {
+    "@remotion/cli": "4.0.507",
+    "@remotion/google-fonts": "4.0.507",
     "next": "16.2.10",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "remotion": "4.0.507"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
