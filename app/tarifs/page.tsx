@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/metadata";
 import Link from "next/link";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -16,12 +17,12 @@ import {
   IconSparkles,
 } from "@/components/ui/icons";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Formules et tarifs pour les avocats",
   description:
     "Les trois formules d’inscription au réseau TakeALawyer : Essentiel gratuit, Premium, et l’offre Pionnière réservée aux 500 premiers inscrits.",
-  alternates: { canonical: "/tarifs" },
-};
+  path: "/tarifs",
+});
 
 /**
  * Grille tarifaire des praticiens.
@@ -38,7 +39,7 @@ export default function TarifsPage() {
 
       <main id="contenu" className="bg-panel pb-24 lg:pb-16">
         <header className="relative isolate border-b border-marine-950/8 bg-marine-950">
-          <PageHeaderBackdrop image="/headers/avocats.webp" position="center 45%" veil={0.18} />
+          <PageHeaderBackdrop image="/headers/avocats.webp" position="center 45%" veil={0.18} priority />
 
           <div className="container-page py-14 lg:py-20">
             <p className="text-[0.7rem] font-bold tracking-[0.22em] text-gold-300 uppercase">

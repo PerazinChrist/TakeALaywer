@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/metadata";
 import Link from "next/link";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -17,12 +18,12 @@ import { IconArrowRight, IconFileText } from "@/components/ui/icons";
 /** La bibliothèque change dès qu'un praticien publie ou dépublie un guide. */
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Guides juridiques et modèles de documents",
   description:
     "Des guides pratiques et des modèles d’actes rédigés par des avocats inscrits au Barreau. Certains sont en lecture libre, les autres se débloquent dès 250 FCFA.",
-  alternates: { canonical: "/guides" },
-};
+  path: "/guides",
+});
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -110,6 +111,7 @@ export default async function GuidesPage({ searchParams }: { searchParams: Searc
             image="/headers/guides.webp"
             position="center 30%"
             veil={0}
+            priority
           />
 
           <div className="container-page py-14 lg:py-20">

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/metadata";
 import Link from "next/link";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -17,12 +18,12 @@ import { IconArrowRight, IconSearch } from "@/components/ui/icons";
 /** L'annuaire change dès qu'une vitrine est publiée ou suspendue. */
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Annuaire des avocats et cabinets vérifiés",
   description:
     "Trouvez un avocat ou un cabinet inscrit au Barreau : filtrez par domaine du droit, ville et barreau. Carte professionnelle contrôlée avant publication.",
-  alternates: { canonical: "/avocats" },
-};
+  path: "/avocats",
+});
 
 /**
  * Paramètres de l'URL.
@@ -111,6 +112,7 @@ export default async function AvocatsPage({ searchParams }: { searchParams: Sear
           <PageHeaderBackdrop
             image="/headers/avocats.webp"
             position="center 45%"
+            priority
           />
 
           <div className="container-page py-14 lg:py-20">

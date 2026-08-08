@@ -16,7 +16,7 @@
  */
 
 import { cache } from "react";
-import { callWordPress } from "@/lib/api/server";
+import { PUBLIC_REVALIDATE, callWordPress } from "@/lib/api/server";
 import { readClientToken } from "@/lib/api/session";
 import type { NeedDetail, NeedsResult } from "@/lib/api/types";
 
@@ -50,6 +50,7 @@ export async function fetchNeeds(query: NeedsQuery = {}): Promise<NeedsResult> {
       per_page: query.perPage ?? 12,
       facets: query.facets ? 1 : undefined,
     }),
+    { revalidate: PUBLIC_REVALIDATE },
   );
 
   if (!response.ok || !response.data) return { ...EMPTY, page };

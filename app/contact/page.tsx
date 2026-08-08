@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/metadata";
 import Link from "next/link";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -16,12 +17,12 @@ import {
   IconWhatsapp,
 } from "@/components/ui/icons";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Nous contacter",
   description:
     "Support, signalement d’un contenu, exercice de vos droits sur vos données, ou question sur l’inscription des avocats.",
-  alternates: { canonical: "/contact" },
-};
+  path: "/contact",
+});
 
 /**
  * Page de contact.
@@ -80,7 +81,7 @@ export default function ContactPage() {
         <header className="relative isolate border-b border-marine-950/8 bg-marine-950">
           {/* Une conversation autour d'une table : la page qui parle de prise
               de contact est la seule des cinq à montrer des personnes. */}
-          <PageHeaderBackdrop image="/headers/comment-ca-marche.webp" position="center 40%" />
+          <PageHeaderBackdrop image="/headers/comment-ca-marche.webp" position="center 40%" priority />
 
           <div className="container-page py-14 lg:py-20">
             <p className="text-[0.7rem] font-bold tracking-[0.22em] text-gold-300 uppercase">

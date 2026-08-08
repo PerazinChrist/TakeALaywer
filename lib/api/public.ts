@@ -12,7 +12,7 @@
  */
 
 import { cache } from "react";
-import { callWordPress } from "@/lib/api/server";
+import { PUBLIC_REVALIDATE, callWordPress } from "@/lib/api/server";
 import { readClientToken } from "@/lib/api/session";
 
 /* -------------------------------------------------------------------------- */
@@ -223,7 +223,9 @@ export const emptyStats: PlatformStats = {
  * fonction, et chacune ne doit pas déclencher sa propre requête HTTP.
  */
 export const fetchHome = cache(async (): Promise<HomePayload> => {
-  const response = await callWordPress<HomePayload>("/home");
+  const response = await callWordPress<HomePayload>("/home", {
+    revalidate: PUBLIC_REVALIDATE,
+  });
 
   if (!response.ok || !response.data) {
     return {
@@ -252,7 +254,9 @@ export const fetchHome = cache(async (): Promise<HomePayload> => {
 
 /** Compteurs seuls, pour les pages qui n'ont pas besoin du reste. */
 export const fetchStats = cache(async (): Promise<PlatformStats> => {
-  const response = await callWordPress<PlatformStats>("/stats");
+  const response = await callWordPress<PlatformStats>("/stats", {
+    revalidate: PUBLIC_REVALIDATE,
+  });
 
   return response.ok && response.data ? { ...emptyStats, ...response.data } : emptyStats;
 });
@@ -289,6 +293,7 @@ export async function fetchDirectory(query: DirectoryQuery = {}): Promise<Direct
       per_page: query.perPage ?? 12,
       facets: query.facets ? 1 : undefined,
     }),
+    { revalidate: PUBLIC_REVALIDATE },
   );
 
   if (!response.ok || !response.data) {
@@ -332,6 +337,7 @@ export async function fetchGuides(query: GuidesQuery = {}): Promise<GuidesResult
       per_page: query.perPage ?? 12,
       facets: query.facets ? 1 : undefined,
     }),
+    { revalidate: PUBLIC_REVALIDATE },
   );
 
   if (!response.ok || !response.data) {
@@ -377,6 +383,7 @@ export const fetchGuide = cache(async (slug: string): Promise<GuideDetail | null
 export async function fetchReviews(limit = 6, minRating = 4): Promise<PublicReview[]> {
   const response = await callWordPress<{ items: PublicReview[] }>(
     withQuery("/reviews", { limit, min_rating: minRating }),
+    { revalidate: PUBLIC_REVALIDATE },
   );
 
   return response.ok && Array.isArray(response.data?.items) ? response.data.items : [];

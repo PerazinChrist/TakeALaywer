@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
@@ -34,11 +35,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   if (!detail) return { title: "Problème introuvable" };
 
-  return {
+  return pageMetadata({
     title: detail.need.title,
     description: detail.need.excerpt,
-    alternates: { canonical: `/communaute/${detail.need.slug}` },
-  };
+    path: `/communaute/${detail.need.slug}`,
+    type: "article",
+  });
 }
 
 export default async function NeedPage({ params }: Params) {

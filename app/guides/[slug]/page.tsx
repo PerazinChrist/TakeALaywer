@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
@@ -38,18 +39,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   if (!guide) return { title: "Guide introuvable" };
 
-  return {
+  return pageMetadata({
     title: guide.title,
     description: guide.description,
-    alternates: { canonical: `/guides/${guide.slug}` },
-    authors: [{ name: guide.author.name }],
-    openGraph: {
-      type: "article",
-      title: guide.title,
-      description: guide.description,
-      publishedTime: guide.publishedAt,
-    },
-  };
+    path: `/guides/${guide.slug}`,
+    type: "article",
+    publishedTime: guide.publishedAt,
+    authors: [guide.author.name],
+  });
 }
 
 export default async function GuidePage({ params }: Params) {

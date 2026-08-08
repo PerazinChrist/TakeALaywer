@@ -5,7 +5,7 @@
  */
 
 import { cache } from "react";
-import { callWordPress } from "@/lib/api/server";
+import { PUBLIC_REVALIDATE, callWordPress } from "@/lib/api/server";
 import { fetchCurrentAccount } from "@/lib/api/account";
 import { toLawyerProfile } from "@/lib/api/profile";
 import { getProfile } from "@/lib/data/lawyer-profile";
@@ -38,6 +38,7 @@ export type VitrineResult = {
 export const fetchVitrine = cache(async (slug: string): Promise<VitrineResult | null> => {
   const published = await callWordPress<Record<string, unknown>>(
     `/lawyers/${encodeURIComponent(slug)}`,
+    { revalidate: PUBLIC_REVALIDATE },
   );
 
   if (published.ok && published.data) {

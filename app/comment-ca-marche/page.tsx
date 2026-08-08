@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/metadata";
 import Link from "next/link";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -23,12 +24,12 @@ import {
 /** Les compteurs affichés viennent de la base. */
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Comment ça marche",
   description:
     "Déposez votre besoin sous pseudonyme, comparez les réponses des avocats vérifiés, ou réglez votre situation seul avec un guide. Le parcours détaillé, étape par étape.",
-  alternates: { canonical: "/comment-ca-marche" },
-};
+  path: "/comment-ca-marche",
+});
 
 const STEPS = [
   {
@@ -136,6 +137,7 @@ export default async function CommentCaMarchePage() {
           <PageHeaderBackdrop
             image="/headers/comment-ca-marche.webp"
             position="center 62%"
+            priority
           />
 
           <div className="container-page py-14 lg:py-20">

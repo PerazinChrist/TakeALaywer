@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
@@ -8,6 +9,8 @@ import { LawyerCard } from "@/components/public/lawyer-card";
 import { GuideShowcaseCard } from "@/components/public/guide-card";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { buttonStyles } from "@/components/ui/button";
+import { JsonLd } from "@/components/seo/json-ld";
+import { breadcrumbLd, collectionLd, directoryPaths, itemListLd } from "@/lib/seo/structured-data";
 import { fetchDirectory, fetchGuides } from "@/lib/api/public";
 import { getPracticeArea, practiceAreas } from "@/lib/data/practice-areas";
 import { groupDigits } from "@/lib/utils";
@@ -32,11 +35,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   if (!area) return { title: "Domaine introuvable" };
 
-  return {
+  return pageMetadata({
     title: `${area.title} — avocats et guides`,
     description: `${area.tagline} Trouvez un avocat qui pratique le ${area.title.toLowerCase()} et consultez les guides du domaine.`,
-    alternates: { canonical: `/domaines/${area.slug}` },
-  };
+    path: `/domaines/${area.slug}`,
+  });
 }
 
 export default async function DomainePage({ params }: Params) {
@@ -230,6 +233,28 @@ export default async function DomainePage({ params }: Params) {
 
       <SiteFooter />
       <MobileActionBar />
+
+      {/* Ces pages n'avaient aucun balisage — pas même un fil d'Ariane. Ce sont
+          pourtant les seules pages thématiques indexables du site, celles qui
+          visent « avocat en droit du travail ». */}
+      <JsonLd
+        data={[
+          collectionLd({
+            name: area.title,
+            description: area.tagline,
+            path: `/domaines/${area.slug}`,
+          }),
+          itemListLd(
+            `Avocats en ${area.title.toLowerCase()}`,
+            directoryPaths(directory.items),
+          ),
+          breadcrumbLd([
+            { name: "Accueil", path: "/" },
+            { name: "Domaines du droit", path: "/domaines" },
+            { name: area.title, path: `/domaines/${area.slug}` },
+          ]),
+        ]}
+      />
     </>
   );
 }

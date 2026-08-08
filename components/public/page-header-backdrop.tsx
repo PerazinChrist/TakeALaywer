@@ -20,25 +20,49 @@ export function PageHeaderBackdrop({
   image,
   position = "center",
   veil = 0.14,
+  priority = false,
 }: {
-  /** Chemin public de l'illustration, servie telle quelle en `background-image`. */
+  /** Chemin public de l'illustration. */
   image: string;
-  /** Cadrage de l'image, en valeurs `background-position`. */
+  /** Cadrage de l'image, en valeurs `object-position`. */
   position?: string;
   /** Densité du voile uniforme, de 0 à 1. À baisser sur une photo déjà sombre. */
   veil?: number;
+  /**
+   * L'image est le plus grand élément visible au chargement.
+   *
+   * À n'activer que sur les bandeaux réellement au-dessus de la ligne de
+   * flottaison : la priorité n'a de valeur que si elle reste rare.
+   */
+  priority?: boolean;
 }) {
   return (
     <div
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
       aria-hidden="true"
     >
-      <div
-        className="absolute inset-0 bg-cover bg-no-repeat [filter:saturate(0.85)_contrast(1.1)]"
-        style={{
-          backgroundImage: `url("${image}")`,
-          backgroundPosition: position,
-        }}
+      {/*
+       * Une balise `img`, et non plus un `background-image`.
+       *
+       * Une image de fond n'est découverte qu'après le téléchargement et
+       * l'analyse de la feuille de styles : sur la bibliothèque, ce bandeau est
+       * l'élément le plus grand de l'écran, et ce report coûtait environ une
+       * seconde de LCP. Dans le balisage, l'analyseur préalable du navigateur la
+       * voit dès le premier octet de HTML et la met en file immédiatement.
+       *
+       * `alt` vide et `aria-hidden` sur le conteneur : c'est un décor, il n'a
+       * rien à annoncer à un lecteur d'écran.
+       */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={image}
+        alt=""
+        aria-hidden="true"
+        decoding="async"
+        fetchPriority={priority ? "high" : "auto"}
+        loading={priority ? "eager" : "lazy"}
+        className="absolute inset-0 size-full object-cover [filter:saturate(0.85)_contrast(1.1)]"
+        style={{ objectPosition: position }}
       />
 
       <div

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
@@ -30,15 +31,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   const { profile, isPreview } = result;
 
-  return {
+  return pageMetadata({
     title: `${profile.name}${profile.subtitle ? ` — ${profile.subtitle}` : ""}`,
     description: profile.headline || `${profile.name}, ${profile.bar}.`,
-    alternates: { canonical: `/avocats/${profile.slug}` },
+    path: `/avocats/${profile.slug}`,
     // Une vitrine en attente de vérification ne doit pas être indexée : elle
     // deviendrait un résultat de recherche pointant vers une page que le public
     // ne peut pas ouvrir.
-    ...(isPreview ? { robots: { index: false, follow: false } } : {}),
-  };
+    noIndex: isPreview,
+  });
 }
 
 /**

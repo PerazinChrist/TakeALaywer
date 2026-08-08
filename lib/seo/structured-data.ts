@@ -70,13 +70,41 @@ export function guideLd(
     datePublished: guide.publishedAt || undefined,
     articleSection: guide.category,
     isAccessibleForFree: guide.free,
-    author: {
-      "@type": "Person",
-      name: guide.author.name,
-      url: absoluteUrl(`/avocats/${guide.author.slug}`),
-      jobTitle: "Avocat",
+    /*
+     * Un cabinet n'est pas une personne.
+     *
+     * Typer « Cabinet Mbala Ngassa » en `Person` avec `jobTitle: "Avocat"`
+     * produisait un balisage faux : une entité collective décrite comme un
+     * individu exerçant. Sur un site YMYL, la paternité est précisément ce que
+     * Google examine — se tromper sur la nature de l'auteur y coûte plus cher
+     * qu'ailleurs.
+     */
+    author:
+      guide.author.type === "cabinet"
+        ? {
+            "@type": "Organization",
+            name: guide.author.name,
+            url: absoluteUrl(`/avocats/${guide.author.slug}`),
+          }
+        : {
+            "@type": "Person",
+            name: guide.author.name,
+            url: absoluteUrl(`/avocats/${guide.author.slug}`),
+            jobTitle: "Avocat",
+          },
+    /*
+     * L'éditeur est décrit sur place, et non par une simple référence `@id`.
+     *
+     * Le nœud `Organization` n'est défini que sur l'accueil ; or Google évalue
+     * chaque page isolément. Un `@id` seul y désigne donc un nœud fantôme, sans
+     * type ni nom — le balisage paraît valide et ne référence rien.
+     */
+    publisher: {
+      "@type": "Organization",
+      "@id": ORGANISATION_ID,
+      name: SITE_NAME,
+      url: SITE_URL,
     },
-    publisher: { "@id": ORGANISATION_ID },
     ...(guide.free
       ? {}
       : {
@@ -95,35 +123,63 @@ export function guideLd(
 /**
  * Avocat ou cabinet.
  *
- * `Attorney` est la spécialisation de `LegalService` reconnue par Google pour
- * les professionnels du droit. La note moyenne n'est incluse que s'il existe
- * réellement des avis publiés : un `aggregateRating` sans avis est le premier
- * motif de rejet des résultats enrichis.
+ * `LegalService` et non `Attorney` : schema.org marque ce dernier comme
+ * déprécié, `supersededBy` pointant explicitement vers `LegalService`, jugé
+ * « plus inclusif et moins ambigu ». Le type déprécié continue d'être compris,
+ * mais bâtir un annuaire entier dessus revient à parier sur une ressource que
+ * son mainteneur a déjà rangée au placard.
+ *
+ * Un praticien indépendant reçoit en plus un nœud `Person` : c'est une personne
+ * qui prête serment et engage sa responsabilité, pas un établissement. Le
+ * cabinet, lui, n'est qu'un service. Cette distinction est précisément ce que
+ * `Attorney` ne permettait pas d'exprimer.
+ *
+ * La note moyenne n'est incluse que s'il existe réellement des avis publiés :
+ * un `aggregateRating` sans avis est le premier motif de rejet des résultats
+ * enrichis.
  */
 export function lawyerLd(profile: LawyerProfile): Record<string, unknown> {
   const url = absoluteUrl(`/avocats/${profile.slug}`);
+  const individual = profile.type === "individuel";
 
   return {
     "@context": "https://schema.org",
-    "@type": "Attorney",
+    "@type": "LegalService",
     "@id": `${url}#praticien`,
     name: profile.name,
     description: profile.headline,
     url,
     image: profile.avatarUrl ?? undefined,
     areaServed: profile.city,
-    knowsLanguage: profile.languages,
+    availableLanguage: profile.languages,
     address: {
       "@type": "PostalAddress",
       streetAddress: profile.address || undefined,
       addressLocality: profile.city,
       addressCountry: "CM",
     },
+    ...(individual
+      ? {
+          employee: {
+            "@type": "Person",
+            name: profile.name,
+            jobTitle: "Avocat",
+            knowsAbout: profile.specialties,
+            knowsLanguage: profile.languages,
+            memberOf: { "@type": "Organization", name: profile.bar },
+          },
+        }
+      : {}),
     // `knowsAbout` porte les domaines d'exercice : c'est le champ que les
     // moteurs génératifs exploitent pour répondre « quel avocat pour… ».
     knowsAbout: profile.specialties,
     memberOf: { "@type": "Organization", name: profile.bar },
-    parentOrganization: { "@id": ORGANISATION_ID },
+    /*
+     * Pas de `parentOrganization` vers TakeALawyer : la plateforme référence ce
+     * praticien, elle ne le détient pas. L'affirmer reviendrait à déclarer que
+     * chaque avocat de l'annuaire est une filiale — faux sur le fond, et
+     * trompeur sur la nature d'un annuaire indépendant.
+     */
     ...(profile.reviewsCount > 0 && profile.rating > 0
       ? {
           aggregateRating: {
@@ -159,6 +215,37 @@ export function itemListLd(
       position: index + 1,
       url: absoluteUrl(path),
     })),
+  };
+}
+
+/**
+ * Page thématique regroupant plusieurs fiches.
+ *
+ * `CollectionPage` dit ce qu'une page de domaine est réellement : un point
+ * d'entrée éditorial vers un ensemble, et non un article. Sans ce type, un
+ * moteur hésite entre les deux et n'accorde à la page ni la crédibilité d'un
+ * contenu rédigé, ni la structure d'un index.
+ */
+export function collectionLd({
+  name,
+  description,
+  path,
+}: {
+  name: string;
+  description: string;
+  path: string;
+}): Record<string, unknown> {
+  const url = absoluteUrl(path);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${url}#page`,
+    name,
+    description,
+    url,
+    inLanguage: "fr-FR",
+    isPartOf: { "@type": "WebSite", "@id": `${SITE_URL}/#site`, name: SITE_NAME },
   };
 }
 

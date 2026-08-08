@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileActionBar } from "@/components/layout/mobile-action-bar";
 import { PageHeaderBackdrop } from "@/components/public/page-header-backdrop";
 import { NeedForm, type NeedTarget } from "@/components/besoin/need-form";
+import { PlatformNotice } from "@/components/public/platform-notice";
 import { fetchCurrentClient } from "@/lib/api/citizen";
 import { fetchHome } from "@/lib/api/public";
 import { fetchVitrine } from "@/lib/api/vitrine";
@@ -73,7 +74,7 @@ export default async function NouveauBesoinPage({
 
       <main id="contenu" className="bg-panel pb-24 lg:pb-16">
         <header className="relative isolate border-b border-marine-950/8 bg-marine-950">
-          <PageHeaderBackdrop image="/headers/avocats.webp" position="center 45%" veil={0.2} />
+          <PageHeaderBackdrop image="/headers/avocats.webp" position="center 45%" veil={0.2} priority />
 
           <div className="container-page py-14 lg:py-18">
             <p className="text-[0.7rem] font-bold tracking-[0.22em] text-gold-300 uppercase">
@@ -97,6 +98,10 @@ export default async function NouveauBesoinPage({
         <div className="relative z-10 container-page -mt-8">
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
             <div className="rounded-3xl bg-white p-6 shadow-card ring-1 ring-marine-950/6 sm:p-8">
+              {/* Avant le formulaire, pas après : c'est la page où l'on
+                  s'apprête à décrire une situation personnelle. */}
+              <PlatformNotice className="mb-6 w-full" />
+
               <NeedForm
                 signedIn={session !== null}
                 target={target}

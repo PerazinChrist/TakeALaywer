@@ -4,6 +4,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { buttonStyles } from "@/components/ui/button";
 import { Rating } from "@/components/ui/rating";
 import { FeaturedGuideSlide } from "@/components/epure/featured-guide-slide";
+import { PlatformNotice } from "@/components/public/platform-notice";
 import { groupDigits } from "@/lib/utils";
 import type { DirectoryEntry, GuideSummary, PlatformStats } from "@/lib/api/public";
 import { IconArrowRight, IconFileText, IconSend } from "@/components/ui/icons";
@@ -96,6 +97,11 @@ export function HeroEpure({
                 note="Téléchargement instantané"
               />
             </div>
+
+            {/* Juste sous les deux portes d'entrée : c'est ici que le visiteur
+                décide de confier sa situation, donc ici qu'il doit savoir à qui
+                il l'adresse. */}
+            <PlatformNotice className="mt-5 max-w-xl" />
 
             {/* Réassurance, sur une seule ligne. */}
             <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">

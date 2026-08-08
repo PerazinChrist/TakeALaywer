@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo/metadata";
 import Link from "next/link";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -11,12 +12,12 @@ import { IconArrowRight, IconFileText, IconUsers } from "@/components/ui/icons";
 /** Les effectifs par domaine viennent de la base. */
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Les domaines du droit",
   description:
     "Droit des affaires, du travail, de la famille, foncier, pénal, fiscal : trouvez le domaine qui correspond à votre situation et les avocats qui le pratiquent.",
-  alternates: { canonical: "/domaines" },
-};
+  path: "/domaines",
+});
 
 export default async function DomainesPage() {
   const home = await fetchHome();
