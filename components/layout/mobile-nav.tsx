@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar } from "@/components/ui/avatar";
@@ -106,7 +107,23 @@ export function MobileNav({
         <Bar shift={open ? "translateY(-7px) rotate(-45deg)" : undefined} />
       </button>
 
-      {open && (
+      {/*
+       * Le panneau est monté sur <body>, et non là où il est écrit.
+       *
+       * L'en-tête porte `backdrop-blur`. Un `backdrop-filter` non nul fait de
+       * l'élément le bloc conteneur de TOUS ses descendants, y compris ceux en
+       * `position: fixed` — au même titre qu'un `transform`. Rendu à
+       * l'intérieur, un `fixed inset-0` ne couvre donc pas la fenêtre mais la
+       * barre elle-même : le panneau se retrouvait enfermé dans ses 80 pixels
+       * de haut, et son `z-index` ne pouvait plus rien puisqu'il jouait à
+       * l'intérieur du contexte d'empilement de la barre, pas au-dessus.
+       *
+       * Le portail est la seule sortie propre : monter la couche ailleurs dans
+       * le DOM tout en la gardant dans l'arbre React, donc avec son état, son
+       * focus et ses gestionnaires d'événements.
+       */}
+      {open &&
+        createPortal(
         <div className="fixed inset-0 z-100 lg:hidden">
           <div
             className="animate-fade-in absolute inset-0 bg-marine-950/50 backdrop-blur-[2px]"
@@ -247,8 +264,9 @@ export function MobileNav({
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </>
   );
 }

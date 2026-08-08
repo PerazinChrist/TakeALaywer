@@ -8,8 +8,20 @@
  * pointe ailleurs que le sitemap : il choisit alors lui-même, souvent mal.
  */
 
-/** Adresse servie si la variable d'environnement est absente ou inexploitable. */
-const FALLBACK_URL = "https://takealawyer.com";
+/**
+ * Adresse servie si la variable d'environnement est absente ou inexploitable.
+ *
+ * C'est le domaine réel du site, avec son « www » : l'apex redirige vers lui en
+ * 308, et une canonique qui pointe vers une adresse redirigée est un signal
+ * brouillé pour rien.
+ *
+ * Le repli portait auparavant un domaine qui ne répond pas. Ce n'était pas
+ * qu'un détail : la variable d'environnement n'ayant pas été déclarée chez
+ * l'hébergeur, tout le site en ligne annonçait comme canonique une adresse
+ * morte — ce qui revient à demander à Google de désindexer chacune de ses
+ * pages. Un repli doit être une valeur juste, pas un espace réservé.
+ */
+const FALLBACK_URL = "https://www.takealawyer.online";
 
 /**
  * Adresse publique du site, sans slash final.
