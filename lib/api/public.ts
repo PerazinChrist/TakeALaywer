@@ -110,6 +110,15 @@ export type GuideSummary = {
   price: number;
   free: boolean;
   pages: number;
+  /**
+   * Ouvertures de la page de lecture, extrait gratuit compris.
+   *
+   * À ne pas confondre avec `downloads`, qui ne compte que les acquisitions.
+   * Les deux étaient longtemps confondus à l'affichage : le nombre de
+   * téléchargements était présenté comme un nombre de lectures, ce qui
+   * sous-estimait l'audience d'un facteur dix et surestimait les ventes d'autant.
+   */
+  views: number;
   downloads: number;
   coverUrl: string | null;
   publishedAt: string;

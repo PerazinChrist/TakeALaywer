@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
+import { SITE_LOCALE, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 import "./globals.css";
 
 /* Titres : police serif -> solennite juridique et haut de gamme. */
@@ -18,7 +19,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://takealawyer.com"),
+  // Une seule source pour l'adresse publique : les canoniques et les images
+  // Open Graph déclarées en chemin relatif s'y adossent. Codée en dur, elle se
+  // serait retrouvée à annoncer le domaine de production depuis une
+  // préproduction — le meilleur moyen de faire désindexer le vrai site.
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "TakeALawyer — Trouvez le bon avocat en un clic",
     template: "%s | TakeALawyer",
@@ -37,11 +42,12 @@ export const metadata: Metadata = {
   authors: [{ name: "TakeALawyer" }],
   openGraph: {
     type: "website",
-    locale: "fr_FR",
-    siteName: "TakeALawyer",
+    locale: SITE_LOCALE,
+    siteName: SITE_NAME,
+    url: SITE_URL,
     title: "TakeALawyer — Trouvez le bon avocat en un clic",
     description:
-      "7 000+ avocats répertoriés. Déposez votre besoin gratuitement et anonymement, recevez des réponses sous 24h.",
+      "Avocats et cabinets vérifiés. Déposez votre besoin gratuitement et anonymement, recevez des réponses sous 24h.",
   },
   twitter: {
     card: "summary_large_image",
@@ -49,7 +55,23 @@ export const metadata: Metadata = {
     description:
       "Déposez votre besoin juridique gratuitement et anonymement. Réponses d’avocats vérifiés sous 24h.",
   },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      // Sans ces trois autorisations, Google se limite à un extrait court et
+      // n'affiche aucune vignette : sur une requête juridique, l'aperçu long
+      // est souvent ce qui décide du clic.
+      "max-snippet": -1,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+    },
+  },
+  // Le français est la seule langue servie aujourd'hui. La déclarer évite que
+  // Google propose une version anglaise inexistante aux régions anglophones.
+  alternates: { languages: { "fr-CM": "/" } },
 };
 
 export const viewport: Viewport = {
@@ -61,27 +83,17 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  /* TEMPORAIRE — `suppressHydrationWarning` : le script anti-flash plus bas pose
-     `data-theme` sur <html> avant l'hydratation, donc l'attribut existe côté
-     client sans figurer dans le HTML du serveur. Sans cette annonce, React tient
-     l'écart pour une erreur d'hydratation, jette le HTML serveur et refait tout
-     le rendu côté client — d'où l'avertissement sur le <script>. À supprimer
-     avec le sélecteur de thème. */
+  /*
+   * Le sélecteur de thème et son script anti-flash ont été retirés : la
+   * colorimétrie est arrêtée sur « or & ambre », qui est la valeur par défaut
+   * de :root dans globals.css. Les retirer était nécessaire, et pas seulement
+   * cosmétique — le script relisait `localStorage`, si bien qu'un visiteur
+   * ayant essayé la variante émeraude pendant la comparaison aurait vu tout le
+   * site en vert, définitivement, sans plus aucun moyen d'en sortir.
+   */
   return (
-    <html
-      lang="fr"
-      suppressHydrationWarning
-      className={`${playfair.variable} ${inter.variable}`}
-    >
+    <html lang="fr" className={`${playfair.variable} ${inter.variable}`}>
       <body className="bg-white font-sans text-marine-950">
-        {/* TEMPORAIRE — applique le thème choisi avant le premier rendu pour
-            éviter un flash. À supprimer avec le sélecteur. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "try{var t=localStorage.getItem('tal-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}",
-          }}
-        />
         <a
           href="#contenu"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-100 focus:rounded-full focus:bg-marine-950 focus:px-5 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-white"

@@ -171,7 +171,10 @@ function toGuide(item: unknown): ProfileGuide[] {
       description: str(item.description),
       category: str(item.category),
       price: num(item.price),
+      free: item.free === true || num(item.price) === 0,
       pages: num(item.pages),
+      views: num(item.views),
+      readingTime: Math.max(1, num(item.readingTime)),
       // L'API renvoie un nombre déjà mis en forme (« 4 015 ») ; le type attend
       // une chaîne, et « — » reste la marque d'un guide jamais téléchargé.
       downloads: str(item.downloads) || "—",

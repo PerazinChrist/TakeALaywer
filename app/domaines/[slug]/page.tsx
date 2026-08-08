@@ -5,7 +5,7 @@ import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileActionBar } from "@/components/layout/mobile-action-bar";
 import { LawyerCard } from "@/components/public/lawyer-card";
-import { GuideCard } from "@/components/public/guide-card";
+import { GuideShowcaseCard } from "@/components/public/guide-card";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { buttonStyles } from "@/components/ui/button";
 import { fetchDirectory, fetchGuides } from "@/lib/api/public";
@@ -194,7 +194,7 @@ export default async function DomainePage({ params }: Params) {
             <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {library.items.map((guide) => (
                 <li key={guide.slug}>
-                  <GuideCard guide={guide} />
+                  <GuideShowcaseCard guide={guide} />
                 </li>
               ))}
             </ul>

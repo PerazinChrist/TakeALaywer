@@ -3,22 +3,23 @@ import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { buttonStyles } from "@/components/ui/button";
 import { NotificationBell } from "@/components/layout/notification-bell";
+import { MobileNav, type NavLink } from "@/components/layout/mobile-nav";
 import { fetchCurrentAccount } from "@/lib/api/account";
 import { fetchCurrentClient } from "@/lib/api/citizen";
 import { IconArrowRight, IconScale, IconUser } from "@/components/ui/icons";
 
 /**
- * En-tête repris de la page d'accueil, en version adoucie.
+ * En-tête de toutes les pages publiques.
  *
- * On garde ce qui fait l'identité du bandeau — fond `bg-panel`, pastille or du
- * logo, liens séparés par des puces rondes — et on retire ce qui le sature :
- * pastilles de réseaux sociaux et panneau hamburger. Sur mobile, il ne reste
- * que le logo et l'accès avocat ; la navigation est assurée par la barre
- * d'action en bas d'écran et par le pied de page.
+ * Bandeau clair, pastille or du logo, liens séparés par des puces rondes.
+ *
+ * Au-delà de `lg`, les liens sont dans la barre. En dessous, ils passent dans
+ * le panneau de `MobileNav` : la barre ne garde que le logo, la cloche et le
+ * bouton menu. Loger en plus l'appel à l'action « Espace Avocat » sur 360 px
+ * poussait le mot-symbole hors de l'écran — il est repris dans le panneau, où
+ * il a la place d'être lisible.
  */
-const navLinks = [
-  // Vers l'accueil réel, et non vers la maquette « épurée » : ce lien est
-  // rendu sur toutes les pages publiques du site, pas seulement sur elle.
+const navLinks: NavLink[] = [
   { href: "/", label: "Accueil" },
   { href: "/avocats", label: "Avocats" },
   { href: "/guides", label: "Guides" },
@@ -102,7 +103,7 @@ export async function SiteHeaderEpure() {
               {client && (
                 <Link
                   href="/compte"
-                  className="flex items-center gap-2 rounded-full bg-white/70 py-1 pr-3.5 pl-1 ring-1 ring-marine-950/12 transition-colors hover:ring-gold-500/40"
+                  className="flex items-center gap-2 rounded-full bg-white/70 py-1 pr-3.5 pl-1 ring-1 ring-marine-950/12 transition-colors hover:ring-gold-500/40 max-lg:hidden"
                   aria-label={`Mon espace — ${client.client.pseudonym}`}
                 >
                   <Avatar initials={initialsOf(client.client.pseudonym)} size="sm" />
@@ -118,7 +119,7 @@ export async function SiteHeaderEpure() {
                   className={buttonStyles({
                     variant: "outline",
                     size: "sm",
-                    className: "border-marine-950/12 bg-white/70",
+                    className: "border-marine-950/12 bg-white/70 max-lg:hidden",
                   })}
                 >
                   {/* « Espace praticien » plutôt que « Mon espace » lorsque la
@@ -135,7 +136,7 @@ export async function SiteHeaderEpure() {
             <>
               <Link
                 href="/compte/connexion"
-                className="hidden items-center gap-1.5 text-[0.95rem] font-medium text-marine-800 transition-colors hover:text-gold-600 sm:flex"
+                className="hidden items-center gap-1.5 text-[0.95rem] font-medium text-marine-800 transition-colors hover:text-gold-600 lg:flex"
               >
                 <IconUser className="size-4" />
                 Se connecter
@@ -146,7 +147,7 @@ export async function SiteHeaderEpure() {
                 className={buttonStyles({
                   variant: "outline",
                   size: "sm",
-                  className: "border-marine-950/12 bg-white/70",
+                  className: "border-marine-950/12 bg-white/70 max-lg:hidden",
                 })}
               >
                 Espace Avocat
@@ -154,6 +155,14 @@ export async function SiteHeaderEpure() {
               </Link>
             </>
           )}
+
+          {/* Sous `lg`, tout ce qui précède est masqué : le panneau prend le
+              relais et porte les mêmes accès, avec la place de les nommer. */}
+          <MobileNav
+            links={navLinks}
+            clientName={client?.client.pseudonym ?? null}
+            hasAccount={session !== null}
+          />
         </div>
       </div>
     </header>

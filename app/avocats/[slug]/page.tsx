@@ -7,6 +7,8 @@ import { ProfileCover } from "@/components/avocats/vitrine/profile-cover";
 import { ProfileSidebar } from "@/components/avocats/vitrine/profile-sidebar";
 import { VitrineBody } from "@/components/avocats/vitrine/vitrine-body";
 import { buttonStyles } from "@/components/ui/button";
+import { JsonLd } from "@/components/seo/json-ld";
+import { breadcrumbLd, lawyerLd } from "@/lib/seo/structured-data";
 import { fetchVitrine } from "@/lib/api/vitrine";
 import { fetchCurrentClient } from "@/lib/api/citizen";
 import { IconAlert, IconPencil } from "@/components/ui/icons";
@@ -69,6 +71,22 @@ export default async function VitrinePage({ params }: Params) {
         phone: session.client.phone,
       }
     : null;
+
+  /*
+   * Une vitrine en attente de vérification n'est pas balisée : le JSON-LD
+   * déclarerait un professionnel du droit exerçant, alors que la plateforme n'a
+   * précisément pas encore vérifié qu'il l'est.
+   */
+  const structuredData = isPreview
+    ? null
+    : [
+        lawyerLd(profile),
+        breadcrumbLd([
+          { name: "Accueil", path: "/" },
+          { name: "Avocats", path: "/avocats" },
+          { name: profile.name, path: `/avocats/${profile.slug}` },
+        ]),
+      ];
 
   return (
     <>
@@ -133,6 +151,8 @@ export default async function VitrinePage({ params }: Params) {
       </main>
 
       <SiteFooter />
+
+      {structuredData && <JsonLd data={structuredData} />}
     </>
   );
 }

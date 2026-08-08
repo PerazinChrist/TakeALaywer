@@ -3,7 +3,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { GuideCard } from "@/components/public/guide-card";
+import { GuideShowcaseCard } from "@/components/public/guide-card";
 import { formatFcfa, groupDigits } from "@/lib/utils";
 import type { GuideDetail, GuideSummary, PlatformStats } from "@/lib/api/public";
 import {
@@ -56,7 +56,7 @@ export function PopularArticles({
 
           <div className={featured ? "flex flex-col gap-4 lg:col-span-5" : "grid gap-4 lg:col-span-12 lg:grid-cols-3"}>
             {others.map((guide) => (
-              <GuideCard key={guide.slug} guide={guide} compact />
+              <GuideShowcaseCard key={guide.slug} guide={guide} />
             ))}
 
             <Link

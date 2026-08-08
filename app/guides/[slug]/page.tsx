@@ -4,9 +4,11 @@ import { notFound } from "next/navigation";
 import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileActionBar } from "@/components/layout/mobile-action-bar";
-import { GuideCard, GuidePrice } from "@/components/public/guide-card";
+import { GuidePrice, GuideShowcaseCard } from "@/components/public/guide-card";
 import { GuideOutline } from "@/components/public/guide-outline";
 import { GuidePaywall } from "@/components/public/guide-paywall";
+import { JsonLd } from "@/components/seo/json-ld";
+import { breadcrumbLd, guideLd } from "@/lib/seo/structured-data";
 import { Avatar } from "@/components/ui/avatar";
 import { Rating } from "@/components/ui/rating";
 import { buttonStyles } from "@/components/ui/button";
@@ -60,36 +62,26 @@ export default async function GuidePage({ params }: Params) {
 
   if (!guide) notFound();
 
-  const { reading, author } = guide;
+  const { reading } = guide;
   const signedIn = session !== null;
 
-  /**
-   * Données structurées — module 3.3.
+  /*
+   * Données structurées — l'article et son fil d'Ariane.
    *
    * `isAccessibleForFree` et `hasPart` décrivent le paywall au format que Google
    * attend. Sans eux, un robot qui ne voit que l'extrait considère la page comme
    * du contenu tronqué ; avec eux, il comprend qu'il s'agit d'un contenu payant
    * légitime et n'en pénalise pas l'indexation.
    */
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: guide.title,
-    description: guide.description,
-    datePublished: guide.publishedAt,
-    articleSection: guide.category,
-    author: { "@type": "Person", name: author.name },
-    isAccessibleForFree: guide.free,
-    ...(guide.free
-      ? {}
-      : {
-          hasPart: {
-            "@type": "WebPageElement",
-            isAccessibleForFree: false,
-            cssSelector: ".guide-paywalled",
-          },
-        }),
-  };
+  const structuredData = [
+    guideLd(guide),
+    breadcrumbLd([
+      { name: "Accueil", path: "/" },
+      { name: "Guides", path: "/guides" },
+      { name: guide.category, path: `/guides?domaine=${encodeURIComponent(guide.category)}` },
+      { name: guide.title, path: `/guides/${guide.slug}` },
+    ]),
+  ];
 
   return (
     <>
@@ -221,7 +213,7 @@ export default async function GuidePage({ params }: Params) {
               <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {guide.related.map((related) => (
                   <li key={related.slug}>
-                    <GuideCard guide={related} />
+                    <GuideShowcaseCard guide={related} />
                   </li>
                 ))}
               </ul>
@@ -233,10 +225,7 @@ export default async function GuidePage({ params }: Params) {
       <SiteFooter />
       <MobileActionBar />
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
+      <JsonLd data={structuredData} />
     </>
   );
 }

@@ -18,7 +18,11 @@ const columns = [
       { label: "Trouver un avocat", href: "/avocats" },
       { label: "Guides & articles", href: "/guides" },
       { label: "Comment ça marche", href: "/comment-ca-marche" },
-      { label: "Diagnostic rapide", href: "/#diagnostic" },
+      // Remplace « Diagnostic rapide », dont l'ancre vivait sur l'ancienne page
+      // d'accueil : le lien menait à un fragment qui n'existe plus, et un lien
+      // mort dans un pied de page rendu sur tout le site coûte doublement — au
+      // visiteur qui clique, et au moteur qui l'explore.
+      { label: "Mon espace citoyen", href: "/compte" },
     ],
   },
   {

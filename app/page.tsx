@@ -1,58 +1,39 @@
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { MobileActionBar } from "@/components/layout/mobile-action-bar";
-import { HeroSection } from "@/components/home/hero-section";
-import { SearchBand } from "@/components/home/search-band";
-import { TrustBanner } from "@/components/home/trust-banner";
-import { NeedCards } from "@/components/home/need-cards";
-import { QuickDiagnostic } from "@/components/home/quick-diagnostic";
-import { HowItWorks } from "@/components/home/how-it-works";
-import { PopularArticles } from "@/components/home/popular-articles";
-import { FeaturedLawyers } from "@/components/home/featured-lawyers";
-import { Testimonials } from "@/components/home/testimonials";
-import { LawyerCta } from "@/components/home/lawyer-cta";
-import { SocialProofToaster } from "@/components/social-proof-toaster";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { fetchCurrentAccount } from "@/lib/api/account";
-import { fetchCurrentClient } from "@/lib/api/citizen";
-import { fetchBadges } from "@/lib/api/desk";
+import { SiteHeaderEpure } from "@/components/epure/site-header-epure";
+import { HeroEpure } from "@/components/epure/hero-epure";
+import { LawyersSpotlight } from "@/components/epure/lawyers-spotlight";
+import { GuidesLibrary } from "@/components/epure/guides-library";
+import { HowItWorksEpure } from "@/components/epure/how-it-works-epure";
 import { fetchHome } from "@/lib/api/public";
-import { buildSocialProof } from "@/lib/data/social-proof";
+import { SITE_URL, absoluteUrl } from "@/lib/seo/site";
 
+/**
+ * Page d'accueil.
+ *
+ * Quatre écrans, une seule idée par écran, beaucoup de vide autour des textes :
+ *   1. Hero — le titre et les deux portes d'entrée.
+ *   2. Avocats à la Une — carrousel des abonnés Premium / Pionnier.
+ *   3. Bibliothèque — guides et modèles dès 250 FCFA.
+ *   4. Comment ça marche — trois étapes puis trois garanties.
+ */
 export const metadata: Metadata = {
+  // `absolute` court-circuite le gabarit « %s | TakeALawyer » du layout : sur
+  // l'accueil, le nom de marque doit ouvrir le titre, pas le fermer.
+  title: {
+    absolute: "TakeALawyer — Trouvez un avocat vérifié au Cameroun",
+  },
+  description:
+    "Trouvez un avocat inscrit au Barreau, posez votre question juridique gratuitement et anonymement, ou téléchargez un guide pratique rédigé par un avocat dès 250 FCFA.",
   alternates: { canonical: "/" },
-};
-
-/** Donnees structurees — module 3.3 (optimisation SEO). */
-const structuredData = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "@id": "https://takealawyer.com/#organisation",
-      name: "TakeALawyer",
-      description:
-        "Plateforme de mise en relation entre citoyens et avocats inscrits au Barreau.",
-      url: "https://takealawyer.com",
-    },
-    {
-      "@type": "WebSite",
-      "@id": "https://takealawyer.com/#site",
-      url: "https://takealawyer.com",
-      name: "TakeALawyer",
-      inLanguage: "fr-FR",
-      publisher: { "@id": "https://takealawyer.com/#organisation" },
-      potentialAction: {
-        "@type": "SearchAction",
-        target: {
-          "@type": "EntryPoint",
-          urlTemplate: "https://takealawyer.com/avocats?q={search_term_string}",
-        },
-        "query-input": "required name=search_term_string",
-      },
-    },
-  ],
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    title: "TakeALawyer — Trouvez un avocat vérifié au Cameroun",
+    description:
+      "Avocats et cabinets vérifiés, question juridique gratuite et anonyme, guides pratiques dès 250 FCFA.",
+  },
 };
 
 /**
@@ -63,52 +44,61 @@ const structuredData = {
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  // L'en-tête est un composant client : il ne peut pas lire les cookies de
-  // session lui-même, on les lui transmet depuis le rendu serveur.
-  const [isSignedIn, clientSignedIn, home, badges] = await Promise.all([
-    fetchCurrentAccount().then(Boolean),
-    fetchCurrentClient().then(Boolean),
-    fetchHome(),
-    fetchBadges(),
-  ]);
+  const home = await fetchHome();
 
-  // Les deux versants sont additionnés : la cloche annonce ce qu'il y a à
-  // lire, la page de notifications se charge ensuite de les séparer.
-  const notifications =
-    (badges.client?.notifications ?? 0) + (badges.account?.notifications ?? 0);
-  const messages = (badges.client?.messages ?? 0) + (badges.account?.messages ?? 0);
+  /*
+   * Données structurées de l'accueil.
+   *
+   * Construites ici plutôt qu'en constante de module : les compteurs viennent
+   * de la base, et un `aggregateRating` figé dans le code finirait par
+   * contredire la page — ce que Google sanctionne comme balisage trompeur.
+   */
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${SITE_URL}/#organisation`,
+        name: "TakeALawyer",
+        url: SITE_URL,
+        description:
+          "Plateforme de mise en relation entre citoyens et avocats inscrits au Barreau, au Cameroun.",
+        areaServed: { "@type": "Country", name: "Cameroun" },
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#site`,
+        url: SITE_URL,
+        name: "TakeALawyer",
+        inLanguage: "fr-FR",
+        publisher: { "@id": `${SITE_URL}/#organisation` },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: absoluteUrl("/avocats?q={search_term_string}"),
+          },
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  };
 
   return (
     <>
-      <SiteHeader
-        isSignedIn={isSignedIn}
-        clientSignedIn={clientSignedIn}
-        notifications={notifications}
-        messages={messages}
-      />
+      <SiteHeaderEpure />
 
-      {/* La marge basse laisse la place a la barre d'action mobile. */}
+      {/* La marge basse laisse la place à la barre d'action mobile. */}
       <main id="contenu" className="pb-24 lg:pb-0">
-        <HeroSection lawyers={home.lawyers} stats={home.stats} />
-        <SearchBand />
-        <TrustBanner stats={home.stats} />
-        <NeedCards specialties={home.facets.specialties} />
-        <QuickDiagnostic specialties={home.facets.specialties} stats={home.stats} />
-        <HowItWorks />
-        <PopularArticles featured={home.featured} guides={home.guides} stats={home.stats} />
-        <FeaturedLawyers lawyers={home.lawyers} stats={home.stats} />
-        <Testimonials reviews={home.reviews} />
-        <LawyerCta />
+        <HeroEpure lawyers={home.lawyers} guides={home.guides} stats={home.stats} />
+        <LawyersSpotlight lawyers={home.lawyers} stats={home.stats} />
+        <GuidesLibrary guides={home.guides} stats={home.stats} />
+        <HowItWorksEpure />
       </main>
 
       <SiteFooter />
 
-      <SocialProofToaster events={buildSocialProof(home)} />
       <MobileActionBar />
-
-      {/* TEMPORAIRE — comparaison des colorimétries. À retirer une fois le
-          thème arrêté. */}
-      <ThemeSwitcher />
 
       <script
         type="application/ld+json"

@@ -5,106 +5,27 @@ import { buttonStyles } from "@/components/ui/button";
 import { formatFcfa, groupDigits } from "@/lib/utils";
 import type { GuideSummary } from "@/lib/api/public";
 import {
-  IconArrowRight,
   IconBadgeCheck,
   IconClock,
   IconCrown,
-  IconDownload,
+  IconEye,
   IconFileText,
   IconSmartphone,
-  IconTrendingUp,
 } from "@/components/ui/icons";
-
-/**
- * Carte de guide — module 3, utilisée par la page d'accueil et la bibliothèque.
- *
- * Elle ne montre jamais le contenu : celui-ci n'est pas chargé sur un index,
- * puisque l'API ne le renvoie qu'à la lecture d'un guide précis.
- */
-export function GuideCard({ guide, compact = false }: { guide: GuideSummary; compact?: boolean }) {
-  return (
-    <article
-      className={
-        compact
-          ? "group flex flex-col rounded-2xl border border-marine-950/8 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-marine-300 hover:shadow-card"
-          : "group flex h-full flex-col rounded-3xl border border-marine-950/8 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-marine-300 hover:shadow-card"
-      }
-    >
-      <div className="flex items-center justify-between gap-3">
-        <span className="truncate text-[0.7rem] font-bold tracking-[0.14em] text-marine-400 uppercase">
-          {guide.category}
-        </span>
-        <GuidePrice guide={guide} />
-      </div>
-
-      <h3
-        className={
-          compact
-            ? "mt-3 font-serif text-lg/snug font-bold text-marine-950"
-            : "mt-3 font-serif text-xl/snug font-bold text-marine-950"
-        }
-      >
-        <Link href={`/guides/${guide.slug}`} className="group-hover:text-gold-700">
-          {guide.title}
-        </Link>
-      </h3>
-
-      <p className="mt-2 line-clamp-3 flex-1 text-sm/relaxed text-marine-600">
-        {guide.description}
-      </p>
-
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-marine-500">
-        <span className="inline-flex items-center gap-1.5">
-          <IconClock className="size-3.5 text-gold-600" />
-          {guide.readingTime} min
-        </span>
-
-        {guide.downloads > 0 && (
-          <span className="inline-flex items-center gap-1.5">
-            <IconTrendingUp className="size-3.5 text-trust-600" />
-            {groupDigits(guide.downloads)} lectures
-          </span>
-        )}
-
-        {guide.kind === "modele" && (
-          <span className="inline-flex items-center gap-1.5">
-            <IconFileText className="size-3.5 text-marine-400" />
-            Modèle
-          </span>
-        )}
-      </div>
-
-      <div className="mt-4 flex items-center justify-between gap-3 border-t border-marine-950/6 pt-3.5">
-        <Link
-          href={`/avocats/${guide.author.slug}`}
-          className="flex min-w-0 items-center gap-2 hover:opacity-80"
-        >
-          <Avatar initials={guide.author.initials} imageUrl={guide.author.avatarUrl} size="sm" />
-          <span className="min-w-0 text-sm/tight">
-            <span className="flex items-center gap-1 truncate font-semibold text-marine-900">
-              {guide.author.name}
-              {guide.author.verified && (
-                <IconBadgeCheck className="size-3.5 shrink-0 text-gold-500" />
-              )}
-            </span>
-            <span className="text-marine-500">{guide.author.city}</span>
-          </span>
-        </Link>
-
-        <IconArrowRight className="size-4 shrink-0 text-marine-300 transition-all group-hover:translate-x-0.5 group-hover:text-gold-600" />
-      </div>
-    </article>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
 
 /** Largeurs des lignes de texte simulées dans l'aperçu du document. */
 const PREVIEW_LINES = ["100%", "94%", "98%", "72%", "96%", "88%", "60%"];
 
 /**
- * Carte de guide « vitrine » — celle de l'accueil épuré, réutilisée telle quelle
- * par la bibliothèque.
+ * Carte de guide — la seule du site.
+ *
+ * Elle sert partout où un guide est présenté à un visiteur : accueil,
+ * bibliothèque, page de domaine, guides liés en fin de lecture, bibliothèque
+ * personnelle du citoyen et vitrine d'un praticien. Une carte unique n'est pas
+ * qu'une affaire de cohérence visuelle : le prix, le badge d'accès et le bouton
+ * d'achat sont des éléments sur lesquels le visiteur apprend à s'orienter, et
+ * deux mises en forme concurrentes lui font relire à chaque fois ce qu'il avait
+ * déjà compris.
  *
  * Elle rend uniquement l'`<article>` : c'est l'appelant qui décide de la largeur
  * (carte fixe dans le carrousel, cellule extensible dans la grille). `h-full`
@@ -156,8 +77,8 @@ export function GuideShowcaseCard({ guide }: { guide: GuideSummary }) {
                 )}
               </span>
               <span className="inline-flex items-center gap-1 text-marine-500">
-                <IconDownload className="size-3.5" />
-                {groupDigits(guide.downloads)} lectures
+                <IconEye className="size-3.5" />
+                {groupDigits(guide.views)} lectures
               </span>
             </span>
           </Link>

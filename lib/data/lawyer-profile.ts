@@ -52,7 +52,13 @@ export type ProfileGuide = {
   description: string;
   category: string;
   price: number;
+  /** Lisible sans payer. Vrai dès que le prix est nul. */
+  free: boolean;
   pages: number;
+  /** Ouvertures de la page de lecture — distinct des acquisitions. */
+  views: number;
+  /** Minutes de lecture, calculées sur le texte par l'API. */
+  readingTime: number;
   downloads: string;
   status: "publie" | "brouillon";
   coverUrl?: string | null;
@@ -294,7 +300,10 @@ const nadegeFokou: LawyerProfile = {
         "Le parcours complet, du dépôt des statuts au RCCM, avec les frais réels constatés à Douala et les pièges qui font rejeter un dossier.",
       category: "Droit des affaires",
       price: 250,
+      free: false,
       pages: 18,
+      views: 32257,
+      readingTime: 27,
       downloads: "4 015",
       status: "publie",
       hasFile: true,
@@ -308,7 +317,10 @@ const nadegeFokou: LawyerProfile = {
         "Ce que l’administration vérifie en priorité, les délais de réponse à ne pas laisser passer, et la conduite à tenir dès la notification.",
       category: "Droit fiscal",
       price: 250,
+      free: false,
       pages: 14,
+      views: 22377,
+      readingTime: 21,
       downloads: "2 780",
       status: "publie",
       hasFile: true,
@@ -322,7 +334,10 @@ const nadegeFokou: LawyerProfile = {
         "Le modèle prêt à adapter, annoté paragraphe par paragraphe : ce qui engage, ce qui se négocie, ce qu’il ne faut jamais écrire.",
       category: "Recouvrement",
       price: 500,
+      free: false,
       pages: 4,
+      views: 15657,
+      readingTime: 6,
       downloads: "1 940",
       status: "publie",
       hasFile: true,
@@ -336,7 +351,10 @@ const nadegeFokou: LawyerProfile = {
         "Clauses d’agrément, sortie conjointe, répartition des dividendes : la trame que je fais signer, expliquée clause par clause.",
       category: "Droit des affaires",
       price: 500,
+      free: false,
       pages: 9,
+      views: 0,
+      readingTime: 14,
       downloads: "—",
       status: "brouillon",
     },
@@ -546,7 +564,10 @@ const cabinetNdongo: LawyerProfile = {
         "Les vérifications à mener avant de signer : titre foncier, bornage, droits coutumiers, et les cinq documents à exiger du vendeur.",
       category: "Droit foncier",
       price: 250,
+      free: false,
       pages: 15,
+      views: 25097,
+      readingTime: 23,
       downloads: "3 120",
       status: "publie",
       hasFile: true,
@@ -560,7 +581,10 @@ const cabinetNdongo: LawyerProfile = {
         "Loyers impayés, expulsion, caution retenue : vos droits et la procédure à suivre, avec les courriers types à envoyer.",
       category: "Droit foncier",
       price: 250,
+      free: false,
       pages: 12,
+      views: 18857,
+      readingTime: 18,
       downloads: "2 340",
       status: "publie",
       hasFile: true,
@@ -574,7 +598,10 @@ const cabinetNdongo: LawyerProfile = {
         "Reconnaître une double vente à temps, sécuriser sa position, et engager l’action qui fait primer votre titre devant le tribunal.",
       category: "Contentieux",
       price: 250,
+      free: false,
       pages: 16,
+      views: 13017,
+      readingTime: 24,
       downloads: "1 610",
       status: "publie",
       hasFile: true,

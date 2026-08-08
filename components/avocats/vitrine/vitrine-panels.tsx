@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
-import { buttonStyles } from "@/components/ui/button";
 import { Rating } from "@/components/ui/rating";
 import { PhotoTile } from "@/components/avocats/vitrine/photo-tile";
 import { ReviewForm, type ReviewIdentity } from "@/components/avocats/vitrine/review-form";
@@ -9,7 +8,9 @@ import {
   ReserveButton,
   type BookingSession,
 } from "@/components/avocats/vitrine/reserve-button";
+import { GuideShowcaseCard } from "@/components/public/guide-card";
 import { cn, formatFcfa } from "@/lib/utils";
+import type { GuideSummary } from "@/lib/api/public";
 import type {
   LawyerProfile,
   Prestation,
@@ -21,14 +22,12 @@ import {
   IconBadgeCheck,
   IconBuilding,
   IconCalendar,
-  IconDownload,
   IconFileText,
   IconGlobe,
   IconMapPin,
   IconPhone,
   IconQuote,
   IconSend,
-  IconSmartphone,
   IconStar,
   IconVideo,
 } from "@/components/ui/icons";
@@ -148,58 +147,62 @@ export function PrestationCard({
 /* Guides                                                                     */
 /* -------------------------------------------------------------------------- */
 
-export function GuideCard({ guide }: { guide: ProfileGuide }) {
-  return (
-    <article className="group flex h-full flex-col rounded-2xl border border-marine-950/10 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-gold-500/40 hover:shadow-card">
-      <div className="flex items-start justify-between gap-3">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-marine-50 px-2.5 py-1 text-[0.7rem] font-bold tracking-wide text-marine-600 uppercase">
-          <IconFileText className="size-3.5" />
-          {guide.kind === "modele" ? "Modèle" : "Guide"}
-        </span>
-        <span className="shrink-0 rounded-full bg-gold-500 px-2.5 py-1 font-serif text-sm font-bold text-marine-950">
-          {formatFcfa(guide.price)}
-        </span>
-      </div>
+/**
+ * Carte de guide de la vitrine.
+ *
+ * Elle délègue à `GuideShowcaseCard`, la carte unique du site : un visiteur qui
+ * a repéré un guide dans la bibliothèque doit retrouver exactement la même
+ * présentation sur la vitrine de son auteur, sinon il doute d'avoir affaire au
+ * même document.
+ *
+ * Le seul travail restant est l'adaptation : la vitrine sert un `ProfileGuide`,
+ * qui ne porte pas son auteur — la page entière est consacrée à lui. On le
+ * reconstitue depuis le profil.
+ */
+export function GuideCard({
+  guide,
+  profile,
+}: {
+  guide: ProfileGuide;
+  profile: LawyerProfile;
+}) {
+  return <GuideShowcaseCard guide={toGuideSummary(guide, profile)} />;
+}
 
-      <p className="mt-3.5 text-[0.7rem] font-bold tracking-[0.14em] text-marine-400 uppercase">
-        {guide.category}
-      </p>
-      <h3 className="mt-1.5 font-serif text-lg/snug font-bold text-balance text-marine-950">
-        <Link href={`/guides/${guide.slug}`} className="hover:text-gold-700">
-          {guide.title}
-        </Link>
-      </h3>
-
-      {/* La description porte l'argument d'achat : sans elle, la carte ne dit
-          que le titre et le prix, ce qui ne décide personne. */}
-      {guide.description && (
-        <p className="mt-2 line-clamp-3 flex-1 text-sm/relaxed text-marine-600">
-          {guide.description}
-        </p>
-      )}
-
-      <p className="mt-3 flex items-center gap-3 text-xs text-marine-500">
-        {guide.pages > 0 && (
-          <span className="inline-flex items-center gap-1">
-            <IconFileText className="size-3.5" />
-            {guide.pages} pages
-          </span>
-        )}
-        <span className="inline-flex items-center gap-1">
-          <IconDownload className="size-3.5" />
-          {guide.downloads}
-        </span>
-      </p>
-
-      <Link
-        href={`/guides/${guide.slug}/acheter`}
-        className={buttonStyles({ size: "sm", full: true, className: "mt-4" })}
-      >
-        <IconSmartphone className="size-4" />
-        Acheter · {formatFcfa(guide.price, { short: true })}
-      </Link>
-    </article>
-  );
+/** Convertit un guide de vitrine en guide de bibliothèque. */
+function toGuideSummary(guide: ProfileGuide, profile: LawyerProfile): GuideSummary {
+  return {
+    id: guide.id ?? guide.slug,
+    slug: guide.slug,
+    kind: guide.kind,
+    format: guide.format,
+    title: guide.title,
+    description: guide.description,
+    category: guide.category,
+    price: guide.price,
+    free: guide.free,
+    pages: guide.pages,
+    views: guide.views,
+    // `downloads` arrive mis en forme (« 4 015 ») : on en retire les
+    // séparateurs pour retrouver le nombre attendu par le type.
+    downloads: Number(guide.downloads.replace(/\D/g, "")) || 0,
+    coverUrl: guide.coverUrl ?? null,
+    publishedAt: guide.updatedAt ?? "",
+    updatedAt: guide.updatedAt ?? "",
+    readingTime: guide.readingTime,
+    author: {
+      slug: profile.slug,
+      name: profile.name,
+      initials: profile.initials,
+      type: profile.type,
+      city: profile.city,
+      avatarUrl: profile.avatarUrl ?? null,
+      rating: profile.rating,
+      // La vitrine n'est publique que pour un compte vérifié : y afficher un
+      // guide, c'est déjà l'attester.
+      verified: profile.isPublished !== false,
+    },
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -335,7 +338,7 @@ export function PanelApercu({
         >
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {published.slice(0, 3).map((guide) => (
-              <GuideCard key={guide.slug} guide={guide} />
+              <GuideCard key={guide.slug} guide={guide} profile={profile} />
             ))}
           </div>
         </SectionCard>
@@ -490,7 +493,7 @@ export function PanelGuides({ profile }: { profile: LawyerProfile }) {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {published.map((guide) => (
-          <GuideCard key={guide.slug} guide={guide} />
+          <GuideCard key={guide.slug} guide={guide} profile={profile} />
         ))}
       </div>
     </SectionCard>

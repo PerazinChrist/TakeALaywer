@@ -33,6 +33,16 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: `Prendre rendez-vous avec ${result.profile.name}`,
     description: `Demandez un créneau auprès de ${result.profile.name}, ${result.profile.bar}. Réponse sous 48 heures ouvrées.`,
     alternates: { canonical: `/avocats/${result.profile.slug}/rendez-vous` },
+    /*
+     * Formulaire, pas contenu : cette page n'apporte rien qu'un moteur puisse
+     * proposer en réponse à une recherche, et elle existe en autant
+     * d'exemplaires qu'il y a de praticiens — c'est-à-dire des centaines de
+     * pages quasi identiques qui diluent l'exploration des vraies vitrines.
+     *
+     * `follow` reste vrai : les liens vers la vitrine et les prestations
+     * continuent de transmettre leur valeur.
+     */
+    robots: { index: false, follow: true },
   };
 }
 

@@ -8,6 +8,8 @@ import { FilterBar, facetOptions } from "@/components/public/filter-bar";
 import { Pagination } from "@/components/public/pagination";
 import { PageHeaderBackdrop } from "@/components/public/page-header-backdrop";
 import { buttonStyles } from "@/components/ui/button";
+import { JsonLd } from "@/components/seo/json-ld";
+import { breadcrumbLd, itemListLd } from "@/lib/seo/structured-data";
 import { fetchGuides } from "@/lib/api/public";
 import { groupDigits } from "@/lib/utils";
 import { IconArrowRight, IconFileText } from "@/components/ui/icons";
@@ -218,6 +220,19 @@ export default async function GuidesPage({ searchParams }: { searchParams: Searc
 
       <SiteFooter />
       <MobileActionBar />
+
+      <JsonLd
+        data={[
+          itemListLd(
+            "Guides juridiques et modèles de documents",
+            library.items.map((guide) => `/guides/${guide.slug}`),
+          ),
+          breadcrumbLd([
+            { name: "Accueil", path: "/" },
+            { name: "Guides", path: "/guides" },
+          ]),
+        ]}
+      />
     </>
   );
 }

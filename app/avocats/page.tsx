@@ -8,6 +8,8 @@ import { FilterBar, facetOptions } from "@/components/public/filter-bar";
 import { Pagination } from "@/components/public/pagination";
 import { PageHeaderBackdrop } from "@/components/public/page-header-backdrop";
 import { buttonStyles } from "@/components/ui/button";
+import { JsonLd } from "@/components/seo/json-ld";
+import { breadcrumbLd, directoryPaths, itemListLd } from "@/lib/seo/structured-data";
 import { fetchDirectory } from "@/lib/api/public";
 import { groupDigits } from "@/lib/utils";
 import { IconArrowRight, IconSearch } from "@/components/ui/icons";
@@ -228,6 +230,18 @@ export default async function AvocatsPage({ searchParams }: { searchParams: Sear
 
       <SiteFooter />
       <MobileActionBar />
+
+      {/* La liste dit au moteur que cette page est un point d'entrée vers des
+          vitrines, et lui en donne l'ordre — sans quoi il doit le deviner. */}
+      <JsonLd
+        data={[
+          itemListLd("Annuaire des avocats et cabinets", directoryPaths(directory.items)),
+          breadcrumbLd([
+            { name: "Accueil", path: "/" },
+            { name: "Avocats", path: "/avocats" },
+          ]),
+        ]}
+      />
     </>
   );
 }
